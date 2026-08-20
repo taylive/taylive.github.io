@@ -55,8 +55,11 @@
      cropping enough to fully hide YouTube's tiny "Sponsored..." text next
      to it would risk cropping the Skip button too, so this leans toward
      keeping Skip clickable over hiding that last bit of text. */
-  #playerFrame{ position:absolute; left:0; width:100%; top:-10%; height:111.11%; }
-  #playerFrame iframe{ width:100%; height:100%; pointer-events:auto; }
+  #playerFrame{ position:absolute; inset:0; overflow:hidden; }
+  /* The iframe's actual position/size/zoom is set in JS (see applyIframeZoom
+     below) rather than fixed CSS, because it depends on the live pixel size
+     of #stage and needs to recompute on resize. */
+  #playerFrame iframe{ position:absolute; pointer-events:auto; }
 
   /* The shield blocks the whole video (no pause, no seek, no hover-triggered
      YouTube UI) except a small notch cut out with clip-path where the
@@ -998,6 +1001,7 @@ function getBroadcastState(songs, atTime){
 
 // ---- DOM refs -------------------------------------------------------------
 const $ = (id)=>document.getElementById(id);
+const stageEl = $('stage');
 const npTitle = $('np-title'), npEra = $('np-era'), unTitle = $('un-title'), upnextBlock = $('upnext-block');
 const clockEl = $('clock'), viewersEl = $('viewers');
 const flashEl = $('flash');
@@ -1114,6 +1118,44 @@ window.onYouTubeIframeAPIReady = function(){ /* overwritten below with createPla
   document.body.appendChild(tag);
 })();
 
+// ---- "Zoom out" the YouTube player itself (Ctrl+- effect, video-only) ---
+// YouTube's own title/buttons/skip-ad UI shrink and simplify based on how
+// big it THINKS its player is — same reason those get smaller if you
+// zoom the whole browser page out. This renders the iframe internally at
+// YT_ZOOM × its real size, then scales it back up with CSS zoom to land in
+// exactly the same visual box as before (same crop math as always: 111.11%
+// height / -10% top, to keep YouTube's title bar cropped off).
+// Turn this down (e.g. 0.25) for an even more minimal/compact YouTube UI —
+// the tradeoff is YouTube also serves a lower-res stream the smaller it
+// thinks its player is, so the video gets a bit softer as this goes down.
+const YT_ZOOM = 0.4;
+const CROP_HEIGHT_SCALE = 1.1111;
+const CROP_TOP_FRACTION = 0.10;
+
+function applyIframeZoom(){
+  if(!player || !player.getIframe) return;
+  const iframe = player.getIframe();
+  if(!iframe) return;
+  const rect = stageEl.getBoundingClientRect();
+  if(!rect.width || !rect.height) return;
+
+  const visualWidth = rect.width;
+  const visualHeight = rect.height * CROP_HEIGHT_SCALE;
+  const visualTop = -rect.height * CROP_TOP_FRACTION;
+
+  iframe.style.left = '0px';
+  iframe.style.top = (visualTop / YT_ZOOM) + 'px';
+  iframe.style.width = (visualWidth / YT_ZOOM) + 'px';
+  iframe.style.height = (visualHeight / YT_ZOOM) + 'px';
+  iframe.style.zoom = YT_ZOOM;
+}
+
+let zoomResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(zoomResizeTimer);
+  zoomResizeTimer = setTimeout(applyIframeZoom, 150);
+});
+
 function createPlayer(){
   const channel = CHANNELS[currentChannelNum];
   const state = getBroadcastState(channel.songs, now());
@@ -1135,7 +1177,11 @@ function createPlayer(){
       start: Math.floor(state.offset), origin: window.location.origin
     },
     events: {
-      onReady: (e)=>{ e.target.playVideo(); applyVolumeToPlayer(); startResync(); },
+      onReady: (e)=>{
+        e.target.playVideo(); applyVolumeToPlayer(); startResync();
+        applyIframeZoom();
+        setTimeout(applyIframeZoom, 300); // iframe isn't always laid out yet on the first tick
+      },
       onStateChange: onPlayerStateChange,
       onApiChange: (e)=>{
         try{
@@ -1267,6 +1313,7 @@ function tuneToChannel(num){
   showBumper(channel);
   if(player && player.loadVideoById){
     player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
+    applyIframeZoom();
   }
   renderGuideList();
 }
