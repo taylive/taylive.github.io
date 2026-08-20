@@ -48,13 +48,23 @@
   #playerFrame{ position:absolute; inset:0; width:100%; height:100%; }
   #playerFrame iframe{ width:100%; height:100%; pointer-events:auto; }
 
-  /* Clicks now reach the player directly (so a native "Skip Ad" button is
-     clickable) instead of being caught by an opaque shield. The JS below
-     force-resumes playback the moment YouTube reports a PAUSED state,
-     regardless of what caused it, so the video itself still can't be
-     stopped this way. #shield is kept around only as a hook in case it's
-     needed again later — it does not intercept anything now. */
-  #shield{ position:absolute; inset:0; z-index:5; pointer-events:none; }
+  /* The shield blocks the whole video (no pause, no seek, no hover-triggered
+     YouTube UI) except a small notch in the bottom-right corner, cut out
+     with clip-path, where a "Skip Ad" button typically renders — clicks
+     there fall straight through the shield to the iframe underneath.
+     We can't detect whether an ad is actually on screen (that's not exposed
+     across the cross-origin iframe boundary), so that corner is *always*
+     click-through. If someone taps it during normal content it can toggle
+     play/pause for a moment, but onPlayerStateChange below force-resumes
+     the instant that happens, so it self-corrects almost immediately. */
+  #shield{
+    position:absolute; inset:0; z-index:5; cursor:default; background:transparent;
+    clip-path: polygon(
+      0 0, 100% 0, 100% calc(100% - 90px),
+      calc(100% - 260px) calc(100% - 90px),
+      calc(100% - 260px) 100%, 0 100%
+    );
+  }
 
   /* Brief black fade used only for channel-change transitions */
   #flash{ position:absolute; inset:0; z-index:9; pointer-events:none; background:#000; opacity:0; }
@@ -215,6 +225,13 @@
   #guideOverlayList{ overflow-y:auto; padding:6px 0 24px 0; flex:1 1 auto; }
 
   @media (max-width:640px){
+    #shield{
+      clip-path: polygon(
+        0 0, 100% 0, 100% calc(100% - 70px),
+        calc(100% - 170px) calc(100% - 70px),
+        calc(100% - 170px) 100%, 0 100%
+      );
+    }
     #guideOverlayPanel{ width:100%; border-radius:0; }
     #bug .name{ font-size:12px; }
     #bug .num{ font-size:9px; padding-right:6px; }
@@ -1228,23 +1245,26 @@ function tuneToChannel(num){
   renderGuideList();
 }
 
-// ---- Anti-pause: clicks now reach the player (so a native "Skip Ad"
-// button works), so this can't block pausing by intercepting the click.
-// Instead it watches for the PAUSED player state itself and immediately
-// resumes playback (see onPlayerStateChange below), no matter what caused
-// it — a click on the video, a spacebar press, whatever.
+// ---- Interaction shield: no pausing, no seeking, no right-click, except
+// in the small bottom-right notch cut out above for the ad-skip button.
+const shield = $('shield');
+shield.addEventListener('click', (e)=>e.preventDefault());
+shield.addEventListener('contextmenu', (e)=>e.preventDefault());
 document.addEventListener('keydown', (e)=>{
   if([' ','k','K','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
 });
 // The keydown guard above only fires while focus stays on the top-level
-// page. A click into the (now clickable) iframe would normally hand it
-// keyboard focus too, which lets it catch space/arrow presses before this
-// page ever sees them — so pull focus straight back whenever it leaves.
+// page. A click into the notch hands the iframe keyboard focus too, which
+// would let it catch space/arrow presses before this page ever sees them —
+// so pull focus straight back whenever it leaves.
 window.addEventListener('blur', ()=>{
   if(document.activeElement && document.activeElement.tagName === 'IFRAME'){
     setTimeout(()=> window.focus(), 0);
   }
 });
+// Belt-and-suspenders: if playback gets paused anyway (a click landing in
+// the notch during normal, non-ad content), onPlayerStateChange below
+// force-resumes it the moment YouTube reports PAUSED.
 
 // ---- Auto-hiding chrome: bug / live badge / lower third ----------------
 let chromeTimer = null;
