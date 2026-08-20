@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>SWIFT TV — CH. 1989</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --accent: #6EC9E0;
+    --accent-dim: #6EC9E033;
+    --bg: #08080b;
+    --panel: #101014;
+    --ink: #f4f2ea;
+    --ink-dim: #a8a6ac;
+    --red: #ff2e4d;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html,body{
+    height:100%;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope', sans-serif;
+    overflow:hidden;
+  }
+
+  #app{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    height:100dvh;
+    background:#000;
+  }
+
+  /* ---------- VIDEO STAGE ---------- */
+  #stage{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#000;
+  }
+
+  #playerFrame{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+
+  #playerFrame iframe{
+    width:100%;
+    height:100%;
+    pointer-events:none;
+  }
+
+  /* click/interaction shield — you cannot touch the broadcast */
+  #shield{
+    position:absolute;
+    inset:0;
+    z-index:5;
+    cursor:default;
+    background:transparent;
+  }
+
+  /* scanline / CRT texture, always on, very subtle */
+  #scanlines{
+    position:absolute;
+    inset:0;
+    z-index:6;
+    pointer-events:none;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.06) 3px,
+      rgba(0,0,0,0) 4px
+    );
+    mix-blend-mode:overlay;
+    opacity:.5;
+  }
+
+  #vignette{
+    position:absolute;
+    inset:0;
+    z-index:6;
+    pointer-events:none;
+    box-shadow: inset 0 0 18vw 2vw rgba(0,0,0,0.55);
+  }
+
+  /* static / glitch transition burst between videos */
+  #static{
+    position:absolute;
+    inset:0;
+    z-index:20;
+    pointer-events:none;
+    opacity:0;
+    background:
+      repeating-linear-gradient(0deg, #fff 0 1px, #000 1px 2px),
+      repeating-linear-gradient(90deg, transparent 0 3px, rgba(255,255,255,.04) 3px 4px);
+    background-size: 100% 3px, 6px 100%;
+    filter: contrast(2) brightness(1.4);
+    mix-blend-mode: screen;
+  }
+  #static.burst{
+    animation: staticBurst .6s steps(2,end) 1;
+  }
+  @keyframes staticBurst{
+    0%{ opacity:.95; transform:translateY(0); }
+    30%{ opacity:.75; transform:translateY(-2%); }
+    60%{ opacity:.5; transform:translateY(1%); }
+    100%{ opacity:0; transform:translateY(0); }
+  }
+  #flash{
+    position:absolute; inset:0; z-index:19; pointer-events:none;
+    background:#fff; opacity:0;
+  }
+  #flash.burst{ animation: flashBurst .6s ease-out 1; }
+  @keyframes flashBurst{
+    0%{ opacity:.55; }
+    100%{ opacity:0; }
+  }
+
+  /* ---------- TUNE-IN SPLASH ---------- */
+  #splash{
+    position:absolute;
+    inset:0;
+    z-index:50;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:28px;
+    text-align:center;
+    background:
+      radial-gradient(ellipse at 50% 20%, var(--accent-dim), transparent 60%),
+      #08080b;
+    transition: opacity .5s ease, visibility .5s ease;
+  }
+  #splash.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+
+  .splash-logo{
+    font-family:'Anton', sans-serif;
+    font-size:clamp(40px, 9vw, 88px);
+    letter-spacing:2px;
+    line-height:.95;
+    color:var(--ink);
+  }
+  .splash-logo span{ color:var(--accent); }
+
+  .splash-sub{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+  }
+
+  .splash-nowplaying{
+    font-family:'Manrope', sans-serif;
+    font-size:14px;
+    color:var(--ink-dim);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .splash-nowplaying b{ color:var(--ink); font-weight:700; }
+
+  #tuneBtn{
+    margin-top:8px;
+    font-family:'Anton', sans-serif;
+    font-size:18px;
+    letter-spacing:3px;
+    color:#08080b;
+    background:var(--accent);
+    border:none;
+    padding:16px 40px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 0 0 0 var(--accent-dim);
+    transition: transform .15s ease, box-shadow .3s ease;
+  }
+  #tuneBtn:hover{ transform:scale(1.04); box-shadow:0 0 40px 6px var(--accent-dim); }
+  #tuneBtn:active{ transform:scale(0.98); }
+
+  /* ---------- CHANNEL BUG (top-left) ---------- */
+  #bug{
+    position:absolute;
+    top:22px; left:22px;
+    z-index:15;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Anton', sans-serif;
+    letter-spacing:1px;
+    padding:8px 14px 8px 10px;
+    background:rgba(8,8,11,0.55);
+    backdrop-filter: blur(6px);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px;
+  }
+  #bug .num{
+    font-size:11px;
+    color:var(--accent);
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:0;
+    border-right:1px solid rgba(255,255,255,.15);
+    padding-right:9px;
+  }
+  #bug .name{ font-size:15px; }
+  #bug .name span{ color:var(--accent); }
+
+  #live{
+    position:absolute;
+    top:22px; right:22px;
+    z-index:15;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--ink-dim);
+  }
+  #live .dot-wrap{
+    display:flex; align-items:center; gap:6px;
+    color:var(--red);
+    font-weight:700;
+    letter-spacing:1px;
+  }
+  #live .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--red);
+    animation: pulse 1.4s infinite ease-in-out;
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(255,46,77,.5); }
+    50%{ opacity:.55; box-shadow:0 0 0 6px rgba(255,46,77,0); }
+  }
+  #clock{ letter-spacing:1px; }
+  #viewers{ letter-spacing:.5px; }
+
+  /* ---------- LOWER THIRD ---------- */
+  #lowerthird{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    z-index:15;
+    display:flex;
+    flex-direction:column;
+    pointer-events:none;
+  }
+
+  #nowbar{
+    margin:0 22px 10px 22px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:20px;
+  }
+
+  #nowplaying-block{
+    background:rgba(8,8,11,0.62);
+    backdrop-filter: blur(8px);
+    border-left:4px solid var(--accent);
+    border-radius:4px;
+    padding:12px 18px;
+    max-width:70%;
+  }
+  #np-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:3px;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+  #np-title{
+    font-family:'Anton', sans-serif;
+    font-size:clamp(20px,3.4vw,34px);
+    letter-spacing:.5px;
+    line-height:1;
+  }
+  #np-era{
+    margin-top:4px;
+    font-size:12px;
+    color:var(--ink-dim);
+    font-weight:600;
+  }
+
+  #upnext-block{
+    background:rgba(8,8,11,0.5);
+    backdrop-filter: blur(8px);
+    border-radius:4px;
+    padding:10px 16px;
+    text-align:right;
+    min-width:180px;
+  }
+  #un-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:9px;
+    letter-spacing:2px;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+    margin-bottom:3px;
+  }
+  #un-title{
+    font-size:14px;
+    font-weight:700;
+  }
+
+  /* ticker */
+  #ticker{
+    background:var(--ink);
+    color:#08080b;
+    display:flex;
+    align-items:center;
+    height:34px;
+    overflow:hidden;
+    white-space:nowrap;
+  }
+  #ticker .ticker-label{
+    flex:0 0 auto;
+    height:100%;
+    display:flex;
+    align-items:center;
+    background:var(--red);
+    color:#fff;
+    font-family:'Anton', sans-serif;
+    font-size:12px;
+    letter-spacing:2px;
+    padding:0 16px;
+  }
+  #ticker-track{
+    display:inline-block;
+    padding-left:100%;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+    animation: scrollTicker 42s linear infinite;
+  }
+  @keyframes scrollTicker{
+    0%{ transform:translateX(0); }
+    100%{ transform:translateX(-100%); }
+  }
+
+  @media (max-width:640px){
+    #bug .name{ font-size:12px; }
+    #bug .num{ font-size:9px; padding-right:6px; }
+    #live{ font-size:10px; gap:8px; }
+    #nowbar{ flex-direction:column; align-items:flex-start; }
+    #nowplaying-block{ max-width:100%; }
+    #upnext-block{ text-align:left; }
+    #np-title{ font-size:20px; }
+  }
+
+  .sr-only{ position:absolute; width:1px;height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div id="stage">
+    <div id="playerFrame"></div>
+    <div id="shield"></div>
+    <div id="scanlines"></div>
+    <div id="vignette"></div>
+    <div id="static"></div>
+    <div id="flash"></div>
+  </div>
+
+  <div id="bug">
+    <span class="num">CH.1989</span>
+    <span class="name">SWIFT <span>TV</span></span>
+  </div>
+
+  <div id="live">
+    <span class="dot-wrap"><span class="dot"></span> ON AIR</span>
+    <span id="viewers">— watching</span>
+    <span id="clock">--:--:--</span>
+  </div>
+
+  <div id="lowerthird">
+    <div id="nowbar">
+      <div id="nowplaying-block">
+        <div id="np-eyebrow">Now Broadcasting</div>
+        <div id="np-title">Tuning in…</div>
+        <div id="np-era"></div>
+      </div>
+      <div id="upnext-block">
+        <div id="un-eyebrow">Up Next</div>
+        <div id="un-title">—</div>
+      </div>
+    </div>
+    <div id="ticker">
+      <div class="ticker-label">SWIFT TV</div>
+      <div id="ticker-track">Loading broadcast feed…</div>
+    </div>
+  </div>
+
+  <div id="splash">
+    <div class="splash-sub">You are tuning in to</div>
+    <div class="splash-logo">SWIFT <span>TV</span></div>
+    <div class="splash-sub">Channel 1989 · Broadcasting 24 Hours</div>
+    <div class="splash-nowplaying">LIVE NOW: <b id="splash-current">—</b></div>
+    <button id="tuneBtn">▶ Tune In</button>
+    <div class="splash-sub" style="opacity:.5;font-size:10px;">This is a continuous broadcast — there is no pause button.</div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================================
+   SWIFT TV — a 24/7 "always-on" broadcast channel.
+   Videos play on a fixed, wall-clock-driven schedule (like real live TV):
+   everyone who tunes in right now sees the same moment of the same video,
+   there's no pause/seek, and the channel just keeps rolling forever.
+
+   NOTE: video IDs are official YouTube uploads. If Taylor's team ever
+   swaps/removes one, the player auto-skips to the next video on error,
+   so the broadcast never actually goes dark.
+   ========================================================================= */
+
+// ---- THE SCHEDULE ---------------------------------------------------
+// duration = approx runtime in seconds (only used to compute where to
+// "tune in" mid-video on load — actual advances are driven by the
+// real YouTube 'ended' event, so drift never accumulates for long).
+const PLAYLIST = [
+  { title:"Shake It Off (Taylor's Version)",      id:"M_JiMkVx0FU", duration:242, era:"1989",        accent:"#6EC9E0" },
+  { title:"You Belong With Me (Taylor's Version)", id:"H9WtMl3a5tA", duration:232, era:"Fearless",     accent:"#F4C95D" },
+  { title:"I Knew You Were Trouble (Taylor's Version)", id:"vqfqOfewMHg", duration:231, era:"Red",     accent:"#C81E3A" },
+  { title:"Blank Space",                          id:"e-ORhEE9VVg", duration:272, era:"1989",        accent:"#6EC9E0" },
+  { title:"Love Story (Taylor's Version)",        id:"lEMeFbxUZks", duration:236, era:"Fearless",     accent:"#F4C95D" },
+  { title:"Look What You Made Me Do",              id:"3tmd-ClpJxA", duration:258, era:"reputation",   accent:"#3a3a3a" },
+  { title:"Style (Taylor's Version)",             id:"2c3VO1u2acY", duration:231, era:"1989",        accent:"#6EC9E0" },
+  { title:"Bad Blood ft. Kendrick Lamar (Taylor's Version)", id:"nkvcA88QN_8", duration:214, era:"1989", accent:"#6EC9E0" },
+  { title:"We Are Never Ever Getting Back Together (Taylor's Version)", id:"eXRe4BcmD1w", duration:235, era:"Red", accent:"#C81E3A" },
+  { title:"cardigan",                             id:"K-a8s8OLBSE", duration:240, era:"folklore",     accent:"#8A9A8B" },
+  { title:"Wildest Dreams (Taylor's Version)",     id:"FKQXZo0nizg", duration:219, era:"1989",        accent:"#6EC9E0" },
+  { title:"willow",                               id:"RsEZmictANA", duration:214, era:"evermore",     accent:"#C97B4A" },
+  { title:"Anti-Hero",                            id:"b1kbLwvqugk", duration:213, era:"Midnights",    accent:"#8B7FD6" },
+  { title:"22 (Taylor's Version)",                id:"ZWHRrrEP-80", duration:233, era:"Red",          accent:"#C81E3A" },
+];
+
+const TOTAL_DURATION = PLAYLIST.reduce((s,v)=>s+v.duration,0);
+// Fixed broadcast epoch — the "channel" has notionally been running since this moment.
+const EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
+
+const FACTS = [
+  "SWIFT TV IS BROADCASTING LIVE, 24 HOURS A DAY, SEVEN DAYS A WEEK",
+  "THIS CHANNEL CANNOT BE PAUSED — IT'S LIVE, JUST LIKE THE REAL THING",
+  "STAY TUNED FOR MORE FROM THE SWIFT TV VAULT",
+  "REFRESH YOUR BROWSER ANYTIME — YOU'LL JOIN THE BROADCAST RIGHT WHERE IT'S AT",
+  "SWIFT TV — CHANNEL 1989 — ALWAYS ON AIR",
+  "NO REMOTE NEEDED. NO PAUSE BUTTON. JUST THE BROADCAST.",
+];
+
+// ---- SCHEDULE MATH ---------------------------------------------------
+function getBroadcastState(atTime){
+  const elapsed = ((atTime - EPOCH) / 1000) % TOTAL_DURATION;
+  let acc = 0;
+  for(let i=0;i<PLAYLIST.length;i++){
+    const v = PLAYLIST[i];
+    if(elapsed < acc + v.duration){
+      return { index:i, offset: elapsed - acc, startedAt: atTime - (elapsed-acc)*1000 };
+    }
+    acc += v.duration;
+  }
+  return { index:0, offset:0, startedAt: atTime };
+}
+
+// ---- DOM refs ----------------------------------------------------------
+const $ = (id)=>document.getElementById(id);
+const npTitle = $('np-title'), npEra = $('np-era'), unTitle = $('un-title');
+const splashCurrent = $('splash-current'), clockEl = $('clock'), viewersEl = $('viewers');
+const tickerTrack = $('ticker-track');
+const staticEl = $('static'), flashEl = $('flash');
+const root = document.documentElement;
+
+function applyEra(video){
+  root.style.setProperty('--accent', video.accent);
+  root.style.setProperty('--accent-dim', video.accent + '33');
+}
+
+function renderNowPlaying(index){
+  const v = PLAYLIST[index];
+  const next = PLAYLIST[(index+1) % PLAYLIST.length];
+  applyEra(v);
+  npTitle.textContent = v.title;
+  npEra.textContent = "TAYLOR SWIFT · " + v.era + " ERA";
+  unTitle.textContent = next.title;
+  splashCurrent.textContent = v.title;
+  document.title = "🔴 " + v.title + " — SWIFT TV";
+}
+
+// ---- Ticker: rotate through facts + full lineup -----------------------
+function buildTickerText(){
+  const lineup = PLAYLIST.map(v=>v.title.toUpperCase()).join("   •   ");
+  return [...FACTS, "COMING UP: " + lineup].join("     ★     ");
+}
+tickerTrack.textContent = buildTickerText();
+
+// ---- Clock + fake viewer count -----------------------------------------
+function tickClock(){
+  clockEl.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+let viewerBase = 8400 + Math.floor(Math.random()*3000);
+function tickViewers(){
+  viewerBase += Math.floor(Math.random()*90) - 40;
+  if(viewerBase < 1000) viewerBase = 1000;
+  viewersEl.textContent = viewerBase.toLocaleString() + " watching";
+}
+setInterval(tickViewers, 2500);
+tickViewers();
+
+// initial "what's on now" for the splash screen, before the user even taps in
+renderNowPlaying(getBroadcastState(Date.now()).index);
+
+// ---- YouTube IFrame API -------------------------------------------------
+let player = null;
+let currentIndex = 0;
+let resyncInterval = null;
+
+window.onYouTubeIframeAPIReady = function(){ /* player created on tune-in */ };
+
+function loadYT(){
+  const tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.body.appendChild(tag);
+}
+loadYT();
+
+function createPlayer(){
+  const state = getBroadcastState(Date.now());
+  currentIndex = state.index;
+  renderNowPlaying(currentIndex);
+
+  player = new YT.Player('playerFrame', {
+    videoId: PLAYLIST[currentIndex].id,
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      disablekb: 1,
+      modestbranding: 1,
+      rel: 0,
+      fs: 0,
+      iv_load_policy: 3,
+      playsinline: 1,
+      start: Math.floor(state.offset),
+      origin: window.location.origin
+    },
+    events: {
+      onReady: (e)=>{
+        e.target.playVideo();
+        startResync();
+      },
+      onStateChange: onPlayerStateChange,
+      onError: ()=> advanceToNext(true)
+    }
+  });
+}
+
+function onPlayerStateChange(e){
+  // 0 = ended
+  if(e.data === YT.PlayerState.ENDED){
+    advanceToNext(false);
+  }
+  // Live TV can't be paused — if something pauses it, resume immediately.
+  if(e.data === YT.PlayerState.PAUSED){
+    e.target.playVideo();
+  }
+}
+
+function transitionBurst(){
+  staticEl.classList.remove('burst'); flashEl.classList.remove('burst');
+  void staticEl.offsetWidth; // restart animation
+  staticEl.classList.add('burst'); flashEl.classList.add('burst');
+}
+
+// Videos that turn out to be broken or non-embeddable get blacklisted for
+// the rest of this session, so the channel just quietly routes around them
+// forever instead of ever getting stuck.
+const deadIndices = new Set();
+
+function nextLiveIndex(fromIndex){
+  if(deadIndices.size >= PLAYLIST.length) return -1; // everything's down
+  let i = fromIndex;
+  do{
+    i = (i + 1) % PLAYLIST.length;
+  } while(deadIndices.has(i));
+  return i;
+}
+
+function advanceToNext(fromError){
+  if(fromError) deadIndices.add(currentIndex);
+
+  const next = nextLiveIndex(currentIndex);
+  if(next === -1){
+    npTitle.textContent = "Technical Difficulties";
+    npEra.textContent = "Please check back shortly";
+    return;
+  }
+
+  transitionBurst();
+  currentIndex = next;
+  renderNowPlaying(currentIndex);
+  setTimeout(()=>{
+    if(player && player.loadVideoById){
+      player.loadVideoById({ videoId: PLAYLIST[currentIndex].id, startSeconds: 0 });
+    }
+  }, fromError ? 400 : 250);
+}
+
+// Keep the broadcast honest to the wall clock — if a viewer's tab throttles
+// in the background, snap back to where the "live" feed actually is.
+function startResync(){
+  if(resyncInterval) clearInterval(resyncInterval);
+  resyncInterval = setInterval(()=>{
+    if(!player || !player.getCurrentTime) return;
+    const state = getBroadcastState(Date.now());
+    if(state.index !== currentIndex && !deadIndices.has(state.index)){
+      // a full song has rolled over while we were away — jump to live
+      currentIndex = state.index;
+      renderNowPlaying(currentIndex);
+      player.loadVideoById({ videoId: PLAYLIST[currentIndex].id, startSeconds: Math.floor(state.offset) });
+      return;
+    }
+    const drift = Math.abs(player.getCurrentTime() - state.offset);
+    if(drift > 4){
+      player.seekTo(state.offset, true);
+    }
+  }, 5000);
+}
+
+// ---- Interaction shield: no pausing, no seeking, no right-click --------
+const shield = $('shield');
+shield.addEventListener('click', (e)=>e.preventDefault());
+shield.addEventListener('contextmenu', (e)=>e.preventDefault());
+document.addEventListener('keydown', (e)=>{
+  if([' ','k','K','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+});
+
+// ---- Tune-in splash ------------------------------------------------------
+$('tuneBtn').addEventListener('click', ()=>{
+  $('splash').classList.add('hidden');
+  if(window.YT && window.YT.Player){
+    createPlayer();
+  } else {
+    window.onYouTubeIframeAPIReady = createPlayer;
+  }
+});
+</script>
+
+</body>
+</html>
