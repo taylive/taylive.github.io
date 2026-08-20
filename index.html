@@ -197,11 +197,10 @@
   .guide-ch-name{ font-size:14px; font-weight:700; }
   .guide-ch-now{ font-size:11px; color:var(--ink-dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  /* ---------- CHANNEL GUIDE OVERLAY (appears on top of the screen; ------- */
-  /* scroll down, or press the channel-number button, to bring it up) ------ */
+  /* ---------- CHANNEL GUIDE OVERLAY (slides in from the right) ----------- */
   #guideOverlay{
     position:fixed; inset:0; z-index:60;
-    display:flex; align-items:flex-start; justify-content:center;
+    display:flex; align-items:stretch; justify-content:flex-end;
     opacity:0; visibility:hidden; pointer-events:none;
     transition: opacity .3s ease, visibility .3s ease;
   }
@@ -210,15 +209,14 @@
     position:absolute; inset:0; background:rgba(4,4,6,0.72); backdrop-filter: blur(4px);
   }
   #guideOverlayPanel{
-    position:relative; z-index:1; width:100%; max-width:680px;
-    height:min(90vh, 860px); margin-top:0;
-    background:var(--panel); border:1px solid rgba(255,255,255,0.08);
-    border-radius:0 0 22px 22px; overflow:hidden;
+    position:relative; z-index:1; width:min(440px, 92vw); height:100%;
+    background:var(--panel); border-left:1px solid rgba(255,255,255,0.08);
+    border-radius:18px 0 0 18px; overflow:hidden;
     display:flex; flex-direction:column;
-    transform:translateY(-16px); transition: transform .3s ease;
-    box-shadow:0 20px 60px rgba(0,0,0,.5);
+    transform:translateX(100%); transition: transform .3s ease;
+    box-shadow:-20px 0 60px rgba(0,0,0,.5);
   }
-  #guideOverlay.open #guideOverlayPanel{ transform:translateY(0); }
+  #guideOverlay.open #guideOverlayPanel{ transform:translateX(0); }
   #guideOverlayHeader{
     display:flex; align-items:center; justify-content:space-between;
     padding:22px 24px 16px 26px; border-bottom:1px solid rgba(255,255,255,0.08);
@@ -234,7 +232,7 @@
   #guideOverlayList{ overflow-y:auto; padding:6px 0 24px 0; flex:1 1 auto; }
 
   @media (max-width:640px){
-    #guideOverlayPanel{ max-width:100%; height:min(92vh, 860px); border-radius:0 0 14px 14px; }
+    #guideOverlayPanel{ width:100%; border-radius:0; }
     #bug .name{ font-size:12px; }
     #bug .num{ font-size:9px; padding-right:6px; }
     #live{ font-size:10px; gap:8px; }
@@ -990,15 +988,36 @@ const bugNum = $('bugNum'), chVal = $('chVal');
 const chromeEl = $('chrome');
 const root = document.documentElement;
 
-function showBumper(holdMs, channel){
+let bumperHideTimer = null;
+let bumperArmed = false; // true from the moment a transition starts until the first PLAYING after it
+
+function showBumper(channel){
   bumperCh.textContent = "CH. " + channel.number + " · " + channel.name;
+  clearTimeout(bumperHideTimer);
   bumperEl.style.transition = 'none';
   bumperEl.style.opacity = '1';
   void bumperEl.offsetWidth;
-  setTimeout(()=>{
-    bumperEl.style.transition = 'opacity .6s ease';
-    bumperEl.style.opacity = '0';
-  }, holdMs);
+  bumperArmed = true;
+  // Safety net: if PLAYING never fires (a broken video, stalled buffering,
+  // etc.) don't leave the screen blacked out forever.
+  bumperHideTimer = setTimeout(hideBumper, 9000);
+}
+
+function hideBumper(){
+  bumperArmed = false;
+  clearTimeout(bumperHideTimer);
+  bumperEl.style.transition = 'opacity .6s ease';
+  bumperEl.style.opacity = '0';
+}
+
+// Called once playback of the new video actually begins — holds the bumper
+// up 5 more seconds so the viewer never sees YouTube's own title/pause
+// overlay flash in before it fades on its own.
+function armedBumperSawPlaying(){
+  if(!bumperArmed) return;
+  bumperArmed = false;
+  clearTimeout(bumperHideTimer);
+  bumperHideTimer = setTimeout(hideBumper, 5000);
 }
 
 function applyEra(song){
@@ -1083,7 +1102,7 @@ function createPlayer(){
   currentIndex = state.index;
   beginTransition();
   renderNowPlaying();
-  showBumper(2200, channel);
+  showBumper(channel);
 
   player = new YT.Player('playerFrame', {
     host: 'https://www.youtube-nocookie.com',
@@ -1125,7 +1144,7 @@ function endTransition(){
 
 let lastForcedPlayAt = 0;
 function onPlayerStateChange(e){
-  if(e.data === YT.PlayerState.PLAYING) endTransition();
+  if(e.data === YT.PlayerState.PLAYING){ endTransition(); armedBumperSawPlaying(); }
   if(e.data === YT.PlayerState.ENDED) advanceToNext(false);
   if(e.data === YT.PlayerState.PAUSED){
     // Live TV can't be paused — but only nudge it at most once a second.
@@ -1167,7 +1186,7 @@ function advanceToNext(fromError){
   currentIndex = next;
   const channel = CHANNELS[currentChannelNum];
   renderNowPlaying();
-  showBumper(2200, channel);
+  showBumper(channel);
   setTimeout(()=>{
     if(player && player.loadVideoById){
       player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: 0 });
@@ -1204,7 +1223,7 @@ function startResync(){
         beginTransition();
         currentIndex = state.index;
         renderNowPlaying();
-        showBumper(2200, channel);
+        showBumper(channel);
         player.loadVideoById({ videoId: songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
       }
       return;
@@ -1224,7 +1243,7 @@ function tuneToChannel(num){
   beginTransition();
   transitionBurst();
   renderNowPlaying();
-  showBumper(2200, channel);
+  showBumper(channel);
   if(player && player.loadVideoById){
     player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
   }
