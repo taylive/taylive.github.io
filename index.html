@@ -21,7 +21,6 @@
   *{ margin:0; padding:0; box-sizing:border-box; }
 
   html,body{
-    height:100%;
     background:var(--bg);
     color:var(--ink);
     font-family:'Manrope', sans-serif;
@@ -52,35 +51,13 @@
   /* click/interaction shield — you cannot touch the broadcast */
   #shield{ position:absolute; inset:0; z-index:5; cursor:default; background:transparent; }
 
-  #scanlines{
-    position:absolute; inset:0; z-index:6; pointer-events:none;
-    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0) 4px);
-    mix-blend-mode:overlay; opacity:.5;
-  }
-  #vignette{ position:absolute; inset:0; z-index:6; pointer-events:none; box-shadow: inset 0 0 18vw 2vw rgba(0,0,0,0.55); }
-
-  #static{
-    position:absolute; inset:0; z-index:20; pointer-events:none; opacity:0;
-    background:
-      repeating-linear-gradient(0deg, #fff 0 1px, #000 1px 2px),
-      repeating-linear-gradient(90deg, transparent 0 3px, rgba(255,255,255,.04) 3px 4px);
-    background-size: 100% 3px, 6px 100%;
-    filter: contrast(2) brightness(1.4);
-    mix-blend-mode: screen;
-  }
-  #static.burst{ animation: staticBurst .6s steps(2,end) 1; }
-  @keyframes staticBurst{
-    0%{ opacity:.95; transform:translateY(0); }
-    30%{ opacity:.75; transform:translateY(-2%); }
-    60%{ opacity:.5; transform:translateY(1%); }
-    100%{ opacity:0; transform:translateY(0); }
-  }
-  #flash{ position:absolute; inset:0; z-index:19; pointer-events:none; background:#fff; opacity:0; }
-  #flash.burst{ animation: flashBurst .6s ease-out 1; }
-  @keyframes flashBurst{ 0%{ opacity:.55; } 100%{ opacity:0; } }
+  /* Brief black fade used only for channel-change transitions */
+  #flash{ position:absolute; inset:0; z-index:9; pointer-events:none; background:#000; opacity:0; }
+  #flash.burst{ animation: flashBurst .5s ease-out 1; }
+  @keyframes flashBurst{ 0%{ opacity:1; } 100%{ opacity:0; } }
 
   #bumper{
-    position:absolute; inset:0; z-index:25; pointer-events:none;
+    position:absolute; inset:0; z-index:8; pointer-events:none;
     display:flex; align-items:center; justify-content:center;
     background:#08080b; opacity:0;
   }
@@ -145,12 +122,42 @@
   #clock{ letter-spacing:1px; }
   #viewers{ letter-spacing:.5px; }
 
+  /* ---------- REMOTE-STYLE VOLUME / CHANNEL CONTROLS ---------- */
+  .tvctrl{
+    position:absolute; top:50%; transform:translateY(-50%); z-index:16;
+    display:flex; flex-direction:column; align-items:center;
+    background:rgba(8,8,11,0.55); backdrop-filter: blur(6px);
+    border:1px solid rgba(255,255,255,0.08); border-radius:16px;
+    width:50px; overflow:hidden;
+  }
+  .tvctrl-left{ left:16px; }
+  .tvctrl-right{ right:16px; }
+  .tvctrl-arrow{
+    background:none; border:none; color:var(--ink-dim); width:100%;
+    padding:12px 0; cursor:pointer; line-height:1; transition: background .15s ease, color .15s ease;
+  }
+  .tvctrl-arrow svg{ width:14px; height:14px; display:block; margin:0 auto; }
+  .tvctrl-arrow:hover{ background:rgba(255,255,255,0.08); color:var(--ink); }
+  .tvctrl-arrow:active{ transform:scale(0.9); }
+  .tvctrl-mid{
+    background:none; border:none; width:100%;
+    border-top:1px solid rgba(255,255,255,.1); border-bottom:1px solid rgba(255,255,255,.1);
+    color:var(--ink); font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700;
+    padding:10px 2px; cursor:pointer; letter-spacing:.5px; text-align:center;
+  }
+  .tvctrl-mid:hover{ background:rgba(255,255,255,0.06); }
+  .tvctrl-mid.muted{ color:var(--red); }
+  .tvctrl-label{
+    font-family:'JetBrains Mono', monospace; font-size:8px; letter-spacing:2px; color:var(--ink-dim);
+    text-transform:uppercase; text-align:center; padding:6px 0 8px 0;
+  }
+
   #guideHint{
     position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:15;
     font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase;
     color:var(--ink-dim); background:rgba(8,8,11,0.5); backdrop-filter: blur(6px);
     padding:7px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
-    display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:8px; cursor:pointer;
   }
   #guideHint svg{ width:12px; height:12px; }
 
@@ -171,34 +178,6 @@
   #un-eyebrow{ font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:2px; color:var(--ink-dim); text-transform:uppercase; margin-bottom:3px; }
   #un-title{ font-size:14px; font-weight:700; }
 
-  /* ---------- CHANNEL GUIDE ---------- */
-  #guideBackdrop{
-    position:absolute; inset:0; z-index:40; background:rgba(0,0,0,0.5);
-    opacity:0; pointer-events:none; transition:opacity .35s ease;
-  }
-  #guideBackdrop.open{ opacity:1; pointer-events:auto; }
-
-  #guide{
-    position:absolute; top:0; right:0; bottom:0; z-index:41;
-    width:min(420px, 92vw); background:rgba(10,10,13,0.92); backdrop-filter: blur(14px);
-    border-left:1px solid rgba(255,255,255,0.08);
-    transform:translateX(100%); transition: transform .4s cubic-bezier(.22,.9,.32,1);
-    display:flex; flex-direction:column;
-  }
-  #guide.open{ transform:translateX(0); }
-
-  #guideHeader{
-    padding:22px 22px 14px 22px; border-bottom:1px solid rgba(255,255,255,0.08);
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  #guideHeader h2{ font-family:'Anton', sans-serif; font-size:20px; letter-spacing:1px; }
-  #guideClose{
-    background:none; border:1px solid rgba(255,255,255,0.15); color:var(--ink-dim);
-    width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; line-height:1;
-  }
-  #guideClose:hover{ color:var(--ink); border-color:rgba(255,255,255,0.35); }
-
-  #guideList{ flex:1; overflow-y:auto; padding:10px 0 24px 0; }
   .guide-group-label{
     font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:3px; color:var(--ink-dim);
     text-transform:uppercase; padding:16px 22px 8px 22px;
@@ -218,7 +197,44 @@
   .guide-ch-name{ font-size:14px; font-weight:700; }
   .guide-ch-now{ font-size:11px; color:var(--ink-dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
+  /* ---------- CHANNEL GUIDE OVERLAY (appears on top of the screen; ------- */
+  /* scroll down, or press the channel-number button, to bring it up) ------ */
+  #guideOverlay{
+    position:fixed; inset:0; z-index:60;
+    display:flex; align-items:flex-start; justify-content:center;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition: opacity .3s ease, visibility .3s ease;
+  }
+  #guideOverlay.open{ opacity:1; visibility:visible; pointer-events:auto; }
+  #guideOverlayBackdrop{
+    position:absolute; inset:0; background:rgba(4,4,6,0.72); backdrop-filter: blur(4px);
+  }
+  #guideOverlayPanel{
+    position:relative; z-index:1; width:100%; max-width:680px;
+    height:min(90vh, 860px); margin-top:0;
+    background:var(--panel); border:1px solid rgba(255,255,255,0.08);
+    border-radius:0 0 22px 22px; overflow:hidden;
+    display:flex; flex-direction:column;
+    transform:translateY(-16px); transition: transform .3s ease;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  #guideOverlay.open #guideOverlayPanel{ transform:translateY(0); }
+  #guideOverlayHeader{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 24px 16px 26px; border-bottom:1px solid rgba(255,255,255,0.08);
+    flex:0 0 auto;
+  }
+  #guideOverlayHeader h2{ font-family:'Anton', sans-serif; font-size:24px; letter-spacing:1px; }
+  #guideOverlayClose{
+    background:none; border:none; color:var(--ink-dim); font-size:22px; line-height:1; cursor:pointer;
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    transition: background .15s ease, color .15s ease;
+  }
+  #guideOverlayClose:hover{ background:rgba(255,255,255,0.08); color:var(--ink); }
+  #guideOverlayList{ overflow-y:auto; padding:6px 0 24px 0; flex:1 1 auto; }
+
   @media (max-width:640px){
+    #guideOverlayPanel{ max-width:100%; height:min(92vh, 860px); border-radius:0 0 14px 14px; }
     #bug .name{ font-size:12px; }
     #bug .num{ font-size:9px; padding-right:6px; }
     #live{ font-size:10px; gap:8px; }
@@ -227,6 +243,11 @@
     #upnext-block{ text-align:left; }
     #np-title{ font-size:20px; }
     #guideHint{ font-size:9px; padding:6px 12px; }
+    .tvctrl{ width:40px; border-radius:12px; }
+    .tvctrl-left{ left:10px; }
+    .tvctrl-right{ right:10px; }
+    .tvctrl-arrow{ padding:9px 0; }
+    .tvctrl-mid{ font-size:10px; padding:8px 2px; }
   }
 </style>
 </head>
@@ -237,9 +258,6 @@
   <div id="stage">
     <div id="playerFrame"></div>
     <div id="shield"></div>
-    <div id="scanlines"></div>
-    <div id="vignette"></div>
-    <div id="static"></div>
     <div id="flash"></div>
     <div id="bumper"><div><div class="bumper-logo">TAY<span>TV</span></div><div class="bumper-ch" id="bumperCh"></div></div></div>
   </div>
@@ -272,17 +290,30 @@
 
     <div id="guideHint">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-      Scroll for Guide
+      Scroll Down for All Channels
     </div>
-  </div>
 
-  <div id="guideBackdrop"></div>
-  <div id="guide">
-    <div id="guideHeader">
-      <h2>CHANNEL GUIDE</h2>
-      <button id="guideClose">✕</button>
+    <div id="volCtrl" class="tvctrl tvctrl-left">
+      <button id="volUp" class="tvctrl-arrow" aria-label="Volume Up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+      </button>
+      <button id="volMid" class="tvctrl-mid" aria-label="Mute"><span id="volVal">10</span></button>
+      <button id="volDown" class="tvctrl-arrow" aria-label="Volume Down">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="tvctrl-label">VOL</div>
     </div>
-    <div id="guideList"></div>
+
+    <div id="chCtrl" class="tvctrl tvctrl-right">
+      <button id="chUp" class="tvctrl-arrow" aria-label="Channel Up">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+      </button>
+      <button id="chMid" class="tvctrl-mid" aria-label="Current Channel"><span id="chVal">1</span></button>
+      <button id="chDown" class="tvctrl-arrow" aria-label="Channel Down">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="tvctrl-label">CH</div>
+    </div>
   </div>
 
   <div id="splash">
@@ -296,6 +327,17 @@
 
 </div>
 
+<div id="guideOverlay">
+  <div id="guideOverlayBackdrop"></div>
+  <div id="guideOverlayPanel">
+    <div id="guideOverlayHeader">
+      <h2>ALL CHANNELS</h2>
+      <button id="guideOverlayClose" aria-label="Close channel guide">✕</button>
+    </div>
+    <div id="guideOverlayList"></div>
+  </div>
+</div>
+
 <script>
 /* =========================================================================
    TAYTV — a multi-channel, 24/7 "always-on" broadcast network.
@@ -306,6 +348,71 @@
    ========================================================================= */
 
 const EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
+
+// ---- GLOBAL CLOCK -------------------------------------------------------
+// The broadcast must land on the exact same video/offset for every viewer,
+// everywhere, even if a viewer's device clock is wrong or has been changed
+// on purpose. So instead of trusting Date.now(), we fetch true UTC time
+// from a public time server once, then track the passage of time using
+// performance.now() — a monotonic clock that keeps ticking steadily and is
+// NOT affected by someone changing their system clock mid-session. We
+// re-sync periodically to correct for any small drift over a long session.
+let timeAnchorEpoch = Date.now();     // best-effort fallback until synced
+let timeAnchorPerf = performance.now();
+let clockSynced = false;
+
+async function fetchServerEpoch(){
+  const attempts = [
+    async ()=>{
+      // Cloudflare's edge responds to every request with a precise server
+      // timestamp — extremely reliable and effectively globally distributed,
+      // so this is tried first.
+      const t0 = performance.now();
+      const res = await fetch('https://cloudflare.com/cdn-cgi/trace', {cache:'no-store'});
+      const text = await res.text();
+      const t1 = performance.now();
+      const match = text.match(/ts=([\d.]+)/);
+      if(!match) throw new Error('no ts in trace');
+      return { epoch: parseFloat(match[1]) * 1000 + (t1-t0)/2, perf: t1 };
+    },
+    async ()=>{
+      const t0 = performance.now();
+      const res = await fetch('https://worldtimeapi.org/api/timezone/Etc/UTC', {cache:'no-store'});
+      const data = await res.json();
+      const t1 = performance.now();
+      return { epoch: data.unixtime*1000 + (t1-t0)/2, perf: t1 };
+    },
+    async ()=>{
+      const t0 = performance.now();
+      const res = await fetch('https://worldclockapi.com/api/json/utc/now', {cache:'no-store'});
+      const data = await res.json();
+      const t1 = performance.now();
+      const epoch = new Date(data.currentDateTime).getTime();
+      return { epoch: epoch + (t1-t0)/2, perf: t1 };
+    },
+  ];
+  for(const attempt of attempts){
+    try{
+      const { epoch, perf } = await attempt();
+      if(Number.isFinite(epoch)){
+        timeAnchorEpoch = epoch;
+        timeAnchorPerf = perf;
+        clockSynced = true;
+        return true;
+      }
+    }catch(err){ /* try next source */ }
+  }
+  return false;
+}
+
+// True-time "now" in epoch ms — same value for every viewer regardless of
+// their device's wall clock, once synced.
+function now(){
+  return timeAnchorEpoch + (performance.now() - timeAnchorPerf);
+}
+
+fetchServerEpoch();                       // sync immediately on load
+setInterval(fetchServerEpoch, 10*60*1000); // and periodically after that
 
 // ---- CHANNEL DEFINITIONS ----------------------------------------------
 // duration = approx runtime in seconds, only used to compute where to
@@ -877,9 +984,9 @@ function getBroadcastState(songs, atTime){
 const $ = (id)=>document.getElementById(id);
 const npTitle = $('np-title'), npEra = $('np-era'), unTitle = $('un-title'), upnextBlock = $('upnext-block');
 const splashCurrent = $('splash-current'), clockEl = $('clock'), viewersEl = $('viewers');
-const staticEl = $('static'), flashEl = $('flash');
+const flashEl = $('flash');
 const bumperEl = $('bumper'), bumperCh = $('bumperCh');
-const bugNum = $('bugNum');
+const bugNum = $('bugNum'), chVal = $('chVal');
 const chromeEl = $('chrome');
 const root = document.documentElement;
 
@@ -906,6 +1013,7 @@ function renderNowPlaying(){
   const next = songs[(currentIndex+1) % songs.length];
   applyEra(song);
   bugNum.textContent = "CH." + channel.number;
+  chVal.textContent = channel.number;
   npTitle.textContent = song.title;
   npEra.textContent = "CH." + channel.number + " · " + channel.name + " · " + song.era;
   if(songs.length > 1){
@@ -920,7 +1028,7 @@ function renderNowPlaying(){
 
 // ---- Clock + fake viewer count ---------------------------------------
 function tickClock(){
-  clockEl.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  clockEl.textContent = new Date(now()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 setInterval(tickClock, 1000);
 tickClock();
@@ -936,8 +1044,23 @@ tickViewers();
 
 // initial "what's on now" for the splash screen, before the user even taps in
 let currentChannelNum = 1;
-let currentIndex = getBroadcastState(CHANNELS[1].songs, Date.now()).index;
+let currentIndex = getBroadcastState(CHANNELS[1].songs, now()).index;
+// True while a song/channel change is actively loading — the 5s wall-clock
+// resync check skips itself during this window so it can't race the load
+// and yank the player mid-transition (this was the cause of videos cutting
+// off early or visibly restarting).
+let isTransitioning = false;
 renderNowPlaying();
+
+// Once the true-time sync lands, recompute in case the device clock was off
+// enough to have picked the wrong song/offset initially (player hasn't
+// started yet if the person is still looking at the splash screen).
+fetchServerEpoch().then(()=>{
+  if(!player){
+    currentIndex = getBroadcastState(CHANNELS[currentChannelNum].songs, now()).index;
+    renderNowPlaying();
+  }
+});
 
 // ---- YouTube IFrame API -------------------------------------------------
 let player = null;
@@ -956,8 +1079,9 @@ window.onYouTubeIframeAPIReady = function(){ /* player created on tune-in */ };
 
 function createPlayer(){
   const channel = CHANNELS[currentChannelNum];
-  const state = getBroadcastState(channel.songs, Date.now());
+  const state = getBroadcastState(channel.songs, now());
   currentIndex = state.index;
+  beginTransition();
   renderNowPlaying();
   showBumper(2200, channel);
 
@@ -970,7 +1094,7 @@ function createPlayer(){
       start: Math.floor(state.offset), origin: window.location.origin
     },
     events: {
-      onReady: (e)=>{ e.target.playVideo(); startResync(); },
+      onReady: (e)=>{ e.target.playVideo(); applyVolumeToPlayer(); startResync(); },
       onStateChange: onPlayerStateChange,
       onApiChange: (e)=>{
         try{
@@ -986,15 +1110,39 @@ function createPlayer(){
   });
 }
 
+let transitionSafetyTimer = null;
+function beginTransition(){
+  isTransitioning = true;
+  clearTimeout(transitionSafetyTimer);
+  // Safety net: if PLAYING never fires (e.g. an unusual player state), don't
+  // leave the resync check disabled forever.
+  transitionSafetyTimer = setTimeout(()=>{ isTransitioning = false; }, 6000);
+}
+function endTransition(){
+  isTransitioning = false;
+  clearTimeout(transitionSafetyTimer);
+}
+
+let lastForcedPlayAt = 0;
 function onPlayerStateChange(e){
+  if(e.data === YT.PlayerState.PLAYING) endTransition();
   if(e.data === YT.PlayerState.ENDED) advanceToNext(false);
-  if(e.data === YT.PlayerState.PAUSED) e.target.playVideo(); // live TV can't be paused
+  if(e.data === YT.PlayerState.PAUSED){
+    // Live TV can't be paused — but only nudge it at most once a second.
+    // Without this throttle, a paused/buffering ad can get forced to
+    // replay repeatedly, which looks like the video "restarting."
+    const t = Date.now();
+    if(t - lastForcedPlayAt > 1000){
+      lastForcedPlayAt = t;
+      e.target.playVideo();
+    }
+  }
 }
 
 function transitionBurst(){
-  staticEl.classList.remove('burst'); flashEl.classList.remove('burst');
-  void staticEl.offsetWidth;
-  staticEl.classList.add('burst'); flashEl.classList.add('burst');
+  flashEl.classList.remove('burst');
+  void flashEl.offsetWidth;
+  flashEl.classList.add('burst');
 }
 
 function nextLiveIndex(chNum, fromIndex){
@@ -1014,6 +1162,7 @@ function advanceToNext(fromError){
     npEra.textContent = "Please check back shortly";
     return;
   }
+  beginTransition();
   transitionBurst();
   currentIndex = next;
   const channel = CHANNELS[currentChannelNum];
@@ -1030,18 +1179,39 @@ function advanceToNext(fromError){
 function startResync(){
   if(resyncInterval) clearInterval(resyncInterval);
   resyncInterval = setInterval(()=>{
-    if(!player || !player.getCurrentTime) return;
+    // Never fight an in-flight song/channel change, and don't touch a
+    // player that's buffering or hasn't started — that combination was
+    // what caused videos to cut off early or visibly restart.
+    if(isTransitioning) return;
+    if(!player || !player.getCurrentTime || !player.getPlayerState) return;
+    const playerState = player.getPlayerState();
+    if(playerState === YT.PlayerState.BUFFERING || playerState === YT.PlayerState.UNSTARTED) return;
+
     const channel = CHANNELS[currentChannelNum];
-    const state = getBroadcastState(channel.songs, Date.now());
-    if(state.index !== currentIndex && !deadSet(currentChannelNum).has(state.index)){
-      currentIndex = state.index;
-      renderNowPlaying();
-      showBumper(2200, channel);
-      player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
+    const songs = channel.songs;
+    const state = getBroadcastState(songs, now());
+
+    if(state.index !== currentIndex){
+      // Song lengths in the schedule are approximate, so the wall-clock
+      // index and the actually-playing index will drift apart by a song
+      // or so during totally normal playback — that's fine, the natural
+      // YouTube "ended" event is the accurate source of truth for that.
+      // Only force a hard reload if we're badly out of sync (e.g. the tab
+      // was backgrounded/throttled for a while).
+      const rawDiff = Math.abs(state.index - currentIndex);
+      const indexDiff = Math.min(rawDiff, songs.length - rawDiff);
+      if(indexDiff > 1 && !deadSet(currentChannelNum).has(state.index)){
+        beginTransition();
+        currentIndex = state.index;
+        renderNowPlaying();
+        showBumper(2200, channel);
+        player.loadVideoById({ videoId: songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
+      }
       return;
     }
+
     const drift = Math.abs(player.getCurrentTime() - state.offset);
-    if(drift > 4) player.seekTo(state.offset, true);
+    if(drift > 6) player.seekTo(state.offset, true);
   }, 5000);
 }
 
@@ -1049,8 +1219,9 @@ function tuneToChannel(num){
   if(num === currentChannelNum) return;
   currentChannelNum = num;
   const channel = CHANNELS[num];
-  const state = getBroadcastState(channel.songs, Date.now());
+  const state = getBroadcastState(channel.songs, now());
   currentIndex = state.index;
+  beginTransition();
   transitionBurst();
   renderNowPlaying();
   showBumper(2200, channel);
@@ -1080,20 +1251,20 @@ function wakeChrome(){
 });
 wakeChrome();
 
-// ---- Channel guide: opens on scroll (wheel) or swipe --------------------
-const guideEl = $('guide'), guideBackdrop = $('guideBackdrop'), guideList = $('guideList');
-let guideTimer = null;
+// ---- Channel guide: a single, larger overlay that pops up on top --------
+const guideOverlay = $('guideOverlay');
+const guideOverlayList = $('guideOverlayList');
 
 function renderGuideList(){
-  guideList.innerHTML = '';
+  guideOverlayList.innerHTML = '';
   GUIDE_ORDER.forEach(group=>{
     const label = document.createElement('div');
     label.className = 'guide-group-label';
     label.textContent = group.label;
-    guideList.appendChild(label);
+    guideOverlayList.appendChild(label);
     group.ids.forEach(id=>{
       const channel = CHANNELS[id];
-      const state = getBroadcastState(channel.songs, Date.now());
+      const state = getBroadcastState(channel.songs, now());
       const nowSong = channel.songs[state.index];
       const row = document.createElement('div');
       row.className = 'guide-row' + (id === currentChannelNum ? ' active' : '');
@@ -1103,49 +1274,99 @@ function renderGuideList(){
           '<div class="guide-ch-name">' + channel.name + '</div>' +
           '<div class="guide-ch-now">NOW: ' + nowSong.title + '</div>' +
         '</div>';
-      row.addEventListener('click', ()=>{ tuneToChannel(id); closeGuide(); });
-      guideList.appendChild(row);
+      row.addEventListener('click', ()=>{
+        tuneToChannel(id);
+        closeGuideOverlay();
+      });
+      guideOverlayList.appendChild(row);
     });
   });
 }
+renderGuideList();
+// Keep "NOW:" text fresh even for channels you're not currently watching —
+// but not while the overlay is open, so it doesn't reset the user's scroll
+// position in the list mid-browse.
+setInterval(()=>{ if(!guideOverlay.classList.contains('open')) renderGuideList(); }, 20000);
 
-function openGuide(){
+function guideIsOpen(){ return guideOverlay.classList.contains('open'); }
+function openGuideOverlay(){
   renderGuideList();
-  guideEl.classList.add('open');
-  guideBackdrop.classList.add('open');
-  clearTimeout(guideTimer);
-  guideTimer = setTimeout(closeGuide, 6000);
+  guideOverlay.classList.add('open');
 }
-function closeGuide(){
-  guideEl.classList.remove('open');
-  guideBackdrop.classList.remove('open');
-  clearTimeout(guideTimer);
+function closeGuideOverlay(){
+  guideOverlay.classList.remove('open');
 }
-function guideIsOpen(){ return guideEl.classList.contains('open'); }
+
+// Scroll (wheel) or swipe up anywhere brings the channel guide up on top of
+// the screen — there's nothing left to scroll on the page itself.
+$('guideHint').addEventListener('click', openGuideOverlay);
+$('guideOverlayClose').addEventListener('click', closeGuideOverlay);
+$('guideOverlayBackdrop').addEventListener('click', closeGuideOverlay);
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeGuideOverlay();
+});
 
 window.addEventListener('wheel', (e)=>{
-  if(guideEl.contains(e.target)) return; // let internal list scroll normally
-  openGuide();
+  if(guideIsOpen()) return; // let the open panel's own list scroll normally
+  openGuideOverlay();
 }, {passive:true});
 
 let touchStartY = null;
 window.addEventListener('touchstart', (e)=>{
-  if(guideEl.contains(e.target)) return;
+  if(guideIsOpen()) return;
   touchStartY = e.touches[0].clientY;
 }, {passive:true});
 window.addEventListener('touchmove', (e)=>{
-  if(touchStartY === null || guideEl.contains(e.target)) return;
+  if(touchStartY === null || guideIsOpen()) return;
   const dy = touchStartY - e.touches[0].clientY;
-  if(Math.abs(dy) > 40){ openGuide(); touchStartY = null; }
+  if(Math.abs(dy) > 40){ openGuideOverlay(); touchStartY = null; }
 }, {passive:true});
 
-guideList.addEventListener('mouseenter', ()=> clearTimeout(guideTimer));
-guideList.addEventListener('mouseleave', ()=>{
-  clearTimeout(guideTimer);
-  guideTimer = setTimeout(closeGuide, 6000);
+// ---- Remote-style volume + channel controls ------------------------------
+const volUpBtn = $('volUp'), volDownBtn = $('volDown'), volMidBtn = $('volMid'), volVal = $('volVal');
+const chUpBtn = $('chUp'), chDownBtn = $('chDown');
+
+let volume = 10;   // 0–10 scale, shown on the remote
+let isMuted = false;
+
+function applyVolumeToPlayer(){
+  if(!player || !player.setVolume) return;
+  player.setVolume(volume * 10);
+  if(isMuted){ if(player.mute) player.mute(); }
+  else { if(player.unMute) player.unMute(); }
+}
+
+function renderVolume(){
+  volVal.textContent = isMuted ? 'MUTE' : volume;
+  volMidBtn.classList.toggle('muted', isMuted);
+}
+renderVolume();
+
+volUpBtn.addEventListener('click', ()=>{
+  volume = Math.min(10, volume + 1);
+  isMuted = false;
+  applyVolumeToPlayer();
+  renderVolume();
 });
-$('guideClose').addEventListener('click', closeGuide);
-guideBackdrop.addEventListener('click', closeGuide);
+volDownBtn.addEventListener('click', ()=>{
+  volume = Math.max(0, volume - 1);
+  applyVolumeToPlayer();
+  renderVolume();
+});
+volMidBtn.addEventListener('click', ()=>{
+  isMuted = !isMuted;
+  applyVolumeToPlayer();
+  renderVolume();
+});
+
+function channelStep(delta){
+  const idx = ALL_CHANNEL_IDS.indexOf(currentChannelNum);
+  const nextId = ALL_CHANNEL_IDS[(idx + delta + ALL_CHANNEL_IDS.length) % ALL_CHANNEL_IDS.length];
+  tuneToChannel(nextId);
+}
+chUpBtn.addEventListener('click', ()=> channelStep(1));
+chDownBtn.addEventListener('click', ()=> channelStep(-1));
+$('chMid').addEventListener('click', openGuideOverlay);
 
 // ---- Tune-in splash ------------------------------------------------------
 $('tuneBtn').addEventListener('click', ()=>{
