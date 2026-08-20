@@ -49,20 +49,29 @@
   #playerFrame iframe{ width:100%; height:100%; pointer-events:auto; }
 
   /* The shield blocks the whole video (no pause, no seek, no hover-triggered
-     YouTube UI) except a small notch in the bottom-right corner, cut out
-     with clip-path, where a "Skip Ad" button typically renders — clicks
-     there fall straight through the shield to the iframe underneath.
-     We can't detect whether an ad is actually on screen (that's not exposed
-     across the cross-origin iframe boundary), so that corner is *always*
-     click-through. If someone taps it during normal content it can toggle
-     play/pause for a moment, but onPlayerStateChange below force-resumes
-     the instant that happens, so it self-corrects almost immediately. */
+     YouTube UI) except a small notch cut out with clip-path where the
+     "Skip Ad" button renders (measured off a screenshot: ~150x72px, with
+     a bit of margin off the bottom-right corner rather than flush against
+     it) — clicks there fall straight through the shield to the iframe
+     underneath. We can't detect whether an ad is actually on screen (that's
+     not exposed across the cross-origin iframe boundary), so that notch is
+     *always* click-through. If someone taps it during normal content it can
+     toggle play/pause for a moment, but onPlayerStateChange below
+     force-resumes the instant that happens, so it self-corrects almost
+     immediately. */
   #shield{
     position:absolute; inset:0; z-index:5; cursor:default; background:transparent;
     clip-path: polygon(
-      0 0, 100% 0, 100% calc(100% - 90px),
-      calc(100% - 260px) calc(100% - 90px),
-      calc(100% - 260px) 100%, 0 100%
+      0 0, 100% 0,
+      100% calc(100% - 104px),
+      calc(100% - 24px) calc(100% - 104px),
+      calc(100% - 174px) calc(100% - 104px),
+      calc(100% - 174px) calc(100% - 32px),
+      calc(100% - 24px) calc(100% - 32px),
+      calc(100% - 24px) calc(100% - 104px),
+      100% calc(100% - 32px),
+      100% 100%,
+      0 100%
     );
   }
 
@@ -227,9 +236,16 @@
   @media (max-width:640px){
     #shield{
       clip-path: polygon(
-        0 0, 100% 0, 100% calc(100% - 70px),
-        calc(100% - 170px) calc(100% - 70px),
-        calc(100% - 170px) 100%, 0 100%
+        0 0, 100% 0,
+        100% calc(100% - 72px),
+        calc(100% - 16px) calc(100% - 72px),
+        calc(100% - 106px) calc(100% - 72px),
+        calc(100% - 106px) calc(100% - 24px),
+        calc(100% - 16px) calc(100% - 24px),
+        calc(100% - 16px) calc(100% - 72px),
+        100% calc(100% - 24px),
+        100% 100%,
+        0 100%
       );
     }
     #guideOverlayPanel{ width:100%; border-radius:0; }
