@@ -553,6 +553,7 @@ function createPlayer(){
       rel: 0,
       fs: 0,
       iv_load_policy: 3,
+      cc_load_policy: 0,
       playsinline: 1,
       start: Math.floor(state.offset),
       origin: window.location.origin
@@ -560,6 +561,7 @@ function createPlayer(){
     events: {
       onReady: (e)=>{
         e.target.playVideo();
+        try{ e.target.unloadModule('captions'); }catch(err){}
         startResync();
       },
       onStateChange: onPlayerStateChange,
@@ -615,6 +617,7 @@ function advanceToNext(fromError){
   setTimeout(()=>{
     if(player && player.loadVideoById){
       player.loadVideoById({ videoId: PLAYLIST[currentIndex].id, startSeconds: 0 });
+      try{ player.unloadModule('captions'); }catch(err){}
     }
   }, fromError ? 400 : 250);
 }
