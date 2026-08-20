@@ -46,10 +46,15 @@
   }
 
   #playerFrame{ position:absolute; inset:0; width:100%; height:100%; }
-  #playerFrame iframe{ width:100%; height:100%; pointer-events:none; }
+  #playerFrame iframe{ width:100%; height:100%; pointer-events:auto; }
 
-  /* click/interaction shield — you cannot touch the broadcast */
-  #shield{ position:absolute; inset:0; z-index:5; cursor:default; background:transparent; }
+  /* Clicks now reach the player directly (so a native "Skip Ad" button is
+     clickable) instead of being caught by an opaque shield. The JS below
+     force-resumes playback the moment YouTube reports a PAUSED state,
+     regardless of what caused it, so the video itself still can't be
+     stopped this way. #shield is kept around only as a hook in case it's
+     needed again later — it does not intercept anything now. */
+  #shield{ position:absolute; inset:0; z-index:5; pointer-events:none; }
 
   /* Brief black fade used only for channel-change transitions */
   #flash{ position:absolute; inset:0; z-index:9; pointer-events:none; background:#000; opacity:0; }
@@ -68,28 +73,6 @@
     letter-spacing:3px; color:var(--ink-dim); text-transform:uppercase;
   }
 
-  /* ---------- TUNE-IN SPLASH ---------- */
-  #splash{
-    position:absolute; inset:0; z-index:50;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:28px; text-align:center;
-    background: radial-gradient(ellipse at 50% 20%, var(--accent-dim), transparent 60%), #08080b;
-    transition: opacity .5s ease, visibility .5s ease;
-  }
-  #splash.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
-  .splash-logo{ font-family:'Anton', sans-serif; font-size:clamp(40px, 9vw, 88px); letter-spacing:2px; line-height:.95; color:var(--ink); }
-  .splash-logo span{ color:var(--accent); }
-  .splash-sub{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-dim); }
-  .splash-nowplaying{ font-size:14px; color:var(--ink-dim); display:flex; align-items:center; gap:8px; }
-  .splash-nowplaying b{ color:var(--ink); font-weight:700; }
-  #tuneBtn{
-    margin-top:8px; font-family:'Anton', sans-serif; font-size:18px; letter-spacing:3px;
-    color:#08080b; background:var(--accent); border:none; padding:16px 40px; border-radius:999px;
-    cursor:pointer; box-shadow:0 0 0 0 var(--accent-dim); transition: transform .15s ease, box-shadow .3s ease;
-  }
-  #tuneBtn:hover{ transform:scale(1.04); box-shadow:0 0 40px 6px var(--accent-dim); }
-  #tuneBtn:active{ transform:scale(0.98); }
-
   /* ---------- ON-SCREEN CHROME (auto-hides) ---------- */
   #chrome{ transition: opacity .5s ease; opacity:1; }
   #chrome.faded{ opacity:0; }
@@ -98,8 +81,8 @@
     position:absolute; top:22px; left:22px; z-index:15;
     display:flex; align-items:center; gap:10px;
     font-family:'Anton', sans-serif; letter-spacing:1px;
-    padding:8px 14px 8px 10px; background:rgba(8,8,11,0.55); backdrop-filter: blur(6px);
-    border:1px solid rgba(255,255,255,0.08); border-radius:8px;
+    padding:8px 14px 8px 10px; background:var(--panel);
+    border:1px solid rgba(255,255,255,0.12); border-radius:8px;
   }
   #bug .num{
     font-size:11px; color:var(--accent); font-family:'JetBrains Mono', monospace;
@@ -126,8 +109,8 @@
   .tvctrl{
     position:absolute; top:50%; transform:translateY(-50%); z-index:16;
     display:flex; flex-direction:column; align-items:center;
-    background:rgba(8,8,11,0.55); backdrop-filter: blur(6px);
-    border:1px solid rgba(255,255,255,0.08); border-radius:16px;
+    background:var(--panel);
+    border:1px solid rgba(255,255,255,0.12); border-radius:16px;
     width:50px; overflow:hidden;
   }
   .tvctrl-left{ left:16px; }
@@ -155,8 +138,8 @@
   #guideHint{
     position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:15;
     font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase;
-    color:var(--ink-dim); background:rgba(8,8,11,0.5); backdrop-filter: blur(6px);
-    padding:7px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
+    color:var(--ink-dim); background:var(--panel);
+    padding:7px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.12);
     display:flex; align-items:center; gap:8px; cursor:pointer;
   }
   #guideHint svg{ width:12px; height:12px; }
@@ -164,14 +147,14 @@
   #lowerthird{ position:absolute; left:0; right:0; bottom:60px; z-index:15; pointer-events:none; }
   #nowbar{ margin:0 22px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
   #nowplaying-block{
-    background:rgba(8,8,11,0.62); backdrop-filter: blur(8px); border-left:4px solid var(--accent);
+    background:var(--panel); border-left:4px solid var(--accent);
     border-radius:4px; padding:12px 18px; max-width:70%;
   }
   #np-eyebrow{ font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; margin-bottom:4px; }
   #np-title{ font-family:'Anton', sans-serif; font-size:clamp(20px,3.4vw,34px); letter-spacing:.5px; line-height:1; }
   #np-era{ margin-top:4px; font-size:12px; color:var(--ink-dim); font-weight:600; }
   #upnext-block{
-    background:rgba(8,8,11,0.5); backdrop-filter: blur(8px); border-radius:4px;
+    background:var(--panel); border-radius:4px;
     padding:10px 16px; text-align:right; min-width:180px;
   }
   #upnext-block.hidden{ display:none; }
@@ -206,7 +189,7 @@
   }
   #guideOverlay.open{ opacity:1; visibility:visible; pointer-events:auto; }
   #guideOverlayBackdrop{
-    position:absolute; inset:0; background:rgba(4,4,6,0.72); backdrop-filter: blur(4px);
+    position:absolute; inset:0; background:rgba(4,4,6,0.82);
   }
   #guideOverlayPanel{
     position:relative; z-index:1; width:min(440px, 92vw); height:100%;
@@ -314,14 +297,6 @@
     </div>
   </div>
 
-  <div id="splash">
-    <div class="splash-sub">You are tuning in to</div>
-    <div class="splash-logo">TAY<span>TV</span></div>
-    <div class="splash-sub">Broadcasting 24 Hours</div>
-    <div class="splash-nowplaying">LIVE NOW: <b id="splash-current">—</b></div>
-    <button id="tuneBtn">▶ Tune In</button>
-    <div class="splash-sub" style="opacity:.5;font-size:10px;">This is a continuous broadcast — there is no pause button.</div>
-  </div>
 
 </div>
 
@@ -981,7 +956,7 @@ function getBroadcastState(songs, atTime){
 // ---- DOM refs -------------------------------------------------------------
 const $ = (id)=>document.getElementById(id);
 const npTitle = $('np-title'), npEra = $('np-era'), unTitle = $('un-title'), upnextBlock = $('upnext-block');
-const splashCurrent = $('splash-current'), clockEl = $('clock'), viewersEl = $('viewers');
+const clockEl = $('clock'), viewersEl = $('viewers');
 const flashEl = $('flash');
 const bumperEl = $('bumper'), bumperCh = $('bumperCh');
 const bugNum = $('bugNum'), chVal = $('chVal');
@@ -1000,7 +975,7 @@ function showBumper(channel){
   bumperArmed = true;
   // Safety net: if PLAYING never fires (a broken video, stalled buffering,
   // etc.) don't leave the screen blacked out forever.
-  bumperHideTimer = setTimeout(hideBumper, 9000);
+  bumperHideTimer = setTimeout(hideBumper, 4000);
 }
 
 function hideBumper(){
@@ -1011,13 +986,13 @@ function hideBumper(){
 }
 
 // Called once playback of the new video actually begins — holds the bumper
-// up 5 more seconds so the viewer never sees YouTube's own title/pause
-// overlay flash in before it fades on its own.
+// up briefly so the viewer never sees YouTube's own title/pause overlay
+// flash in before it fades on its own.
 function armedBumperSawPlaying(){
   if(!bumperArmed) return;
   bumperArmed = false;
   clearTimeout(bumperHideTimer);
-  bumperHideTimer = setTimeout(hideBumper, 5000);
+  bumperHideTimer = setTimeout(hideBumper, 800);
 }
 
 function applyEra(song){
@@ -1041,7 +1016,6 @@ function renderNowPlaying(){
   } else {
     upnextBlock.classList.add('hidden');
   }
-  splashCurrent.textContent = song.title + " — CH." + channel.number;
   document.title = "🔴 CH." + channel.number + " " + song.title + " — TAYTV";
 }
 
@@ -1061,7 +1035,8 @@ function tickViewers(){
 setInterval(tickViewers, 2500);
 tickViewers();
 
-// initial "what's on now" for the splash screen, before the user even taps in
+// initial "what's on now", computed immediately so the lower-third has
+// correct info the instant the page paints, before the player even loads
 let currentChannelNum = 1;
 let currentIndex = getBroadcastState(CHANNELS[1].songs, now()).index;
 // True while a song/channel change is actively loading — the 5s wall-clock
@@ -1072,8 +1047,8 @@ let isTransitioning = false;
 renderNowPlaying();
 
 // Once the true-time sync lands, recompute in case the device clock was off
-// enough to have picked the wrong song/offset initially (player hasn't
-// started yet if the person is still looking at the splash screen).
+// enough to have picked the wrong song/offset initially (only matters if
+// this resolves before the player has actually started).
 fetchServerEpoch().then(()=>{
   if(!player){
     currentIndex = getBroadcastState(CHANNELS[currentChannelNum].songs, now()).index;
@@ -1089,7 +1064,7 @@ let resyncInterval = null;
 const deadIndices = {};
 function deadSet(chNum){ if(!deadIndices[chNum]) deadIndices[chNum] = new Set(); return deadIndices[chNum]; }
 
-window.onYouTubeIframeAPIReady = function(){ /* player created on tune-in */ };
+window.onYouTubeIframeAPIReady = function(){ /* overwritten below with createPlayer once the DOM has set up its listeners */ };
 (function loadYT(){
   const tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
@@ -1108,7 +1083,11 @@ function createPlayer(){
     host: 'https://www.youtube-nocookie.com',
     videoId: channel.songs[currentIndex].id,
     playerVars: {
-      autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, fs: 0,
+      // Starts muted: browsers block autoplay-with-sound unless it's in
+      // response to a user gesture, and we're now autoplaying immediately
+      // on page load with no "Tune In" click to anchor to. unmuteOnFirstInteraction
+      // below unmutes it the moment the visitor does anything on the page.
+      autoplay: 1, mute: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, fs: 0,
       iv_load_policy: 3, cc_load_policy: 0, playsinline: 1,
       start: Math.floor(state.offset), origin: window.location.origin
     },
@@ -1186,7 +1165,6 @@ function advanceToNext(fromError){
   currentIndex = next;
   const channel = CHANNELS[currentChannelNum];
   renderNowPlaying();
-  showBumper(channel);
   setTimeout(()=>{
     if(player && player.loadVideoById){
       player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: 0 });
@@ -1250,12 +1228,22 @@ function tuneToChannel(num){
   renderGuideList();
 }
 
-// ---- Interaction shield: no pausing, no seeking, no right-click --------
-const shield = $('shield');
-shield.addEventListener('click', (e)=>e.preventDefault());
-shield.addEventListener('contextmenu', (e)=>e.preventDefault());
+// ---- Anti-pause: clicks now reach the player (so a native "Skip Ad"
+// button works), so this can't block pausing by intercepting the click.
+// Instead it watches for the PAUSED player state itself and immediately
+// resumes playback (see onPlayerStateChange below), no matter what caused
+// it — a click on the video, a spacebar press, whatever.
 document.addEventListener('keydown', (e)=>{
   if([' ','k','K','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+});
+// The keydown guard above only fires while focus stays on the top-level
+// page. A click into the (now clickable) iframe would normally hand it
+// keyboard focus too, which lets it catch space/arrow presses before this
+// page ever sees them — so pull focus straight back whenever it leaves.
+window.addEventListener('blur', ()=>{
+  if(document.activeElement && document.activeElement.tagName === 'IFRAME'){
+    setTimeout(()=> window.focus(), 0);
+  }
 });
 
 // ---- Auto-hiding chrome: bug / live badge / lower third ----------------
@@ -1387,11 +1375,17 @@ chUpBtn.addEventListener('click', ()=> channelStep(1));
 chDownBtn.addEventListener('click', ()=> channelStep(-1));
 $('chMid').addEventListener('click', openGuideOverlay);
 
-// ---- Tune-in splash ------------------------------------------------------
-$('tuneBtn').addEventListener('click', ()=>{
-  $('splash').classList.add('hidden');
-  if(window.YT && window.YT.Player){ createPlayer(); }
-  else { window.onYouTubeIframeAPIReady = createPlayer; }
+// ---- Jump straight into Channel 1 on load --------------------------------
+if(window.YT && window.YT.Player){ createPlayer(); }
+else { window.onYouTubeIframeAPIReady = createPlayer; }
+
+// The player boots muted (see createPlayer) so autoplay isn't blocked.
+// The instant the visitor does anything at all, unmute for real.
+function unmuteOnFirstInteraction(){
+  applyVolumeToPlayer();
+}
+['click','keydown','touchstart'].forEach(evt=>{
+  document.addEventListener(evt, unmuteOnFirstInteraction, {once:true, passive:true});
 });
 </script>
 
