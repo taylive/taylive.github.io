@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>SWIFT TV — CH. 1989</title>
+<title>TAYTV — Live Broadcast</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
@@ -46,60 +46,21 @@
     background:#000;
   }
 
-  #playerFrame{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-  }
-
-  #playerFrame iframe{
-    width:100%;
-    height:100%;
-    pointer-events:none;
-  }
+  #playerFrame{ position:absolute; inset:0; width:100%; height:100%; }
+  #playerFrame iframe{ width:100%; height:100%; pointer-events:none; }
 
   /* click/interaction shield — you cannot touch the broadcast */
-  #shield{
-    position:absolute;
-    inset:0;
-    z-index:5;
-    cursor:default;
-    background:transparent;
-  }
+  #shield{ position:absolute; inset:0; z-index:5; cursor:default; background:transparent; }
 
-  /* scanline / CRT texture, always on, very subtle */
   #scanlines{
-    position:absolute;
-    inset:0;
-    z-index:6;
-    pointer-events:none;
-    background:repeating-linear-gradient(
-      to bottom,
-      rgba(0,0,0,0) 0px,
-      rgba(0,0,0,0) 2px,
-      rgba(0,0,0,0.06) 3px,
-      rgba(0,0,0,0) 4px
-    );
-    mix-blend-mode:overlay;
-    opacity:.5;
+    position:absolute; inset:0; z-index:6; pointer-events:none;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0) 4px);
+    mix-blend-mode:overlay; opacity:.5;
   }
+  #vignette{ position:absolute; inset:0; z-index:6; pointer-events:none; box-shadow: inset 0 0 18vw 2vw rgba(0,0,0,0.55); }
 
-  #vignette{
-    position:absolute;
-    inset:0;
-    z-index:6;
-    pointer-events:none;
-    box-shadow: inset 0 0 18vw 2vw rgba(0,0,0,0.55);
-  }
-
-  /* static / glitch transition burst between videos */
   #static{
-    position:absolute;
-    inset:0;
-    z-index:20;
-    pointer-events:none;
-    opacity:0;
+    position:absolute; inset:0; z-index:20; pointer-events:none; opacity:0;
     background:
       repeating-linear-gradient(0deg, #fff 0 1px, #000 1px 2px),
       repeating-linear-gradient(90deg, transparent 0 3px, rgba(255,255,255,.04) 3px 4px);
@@ -107,157 +68,76 @@
     filter: contrast(2) brightness(1.4);
     mix-blend-mode: screen;
   }
-  #static.burst{
-    animation: staticBurst .6s steps(2,end) 1;
-  }
+  #static.burst{ animation: staticBurst .6s steps(2,end) 1; }
   @keyframes staticBurst{
     0%{ opacity:.95; transform:translateY(0); }
     30%{ opacity:.75; transform:translateY(-2%); }
     60%{ opacity:.5; transform:translateY(1%); }
     100%{ opacity:0; transform:translateY(0); }
   }
-  #flash{
-    position:absolute; inset:0; z-index:19; pointer-events:none;
-    background:#fff; opacity:0;
-  }
+  #flash{ position:absolute; inset:0; z-index:19; pointer-events:none; background:#fff; opacity:0; }
   #flash.burst{ animation: flashBurst .6s ease-out 1; }
-  @keyframes flashBurst{
-    0%{ opacity:.55; }
-    100%{ opacity:0; }
-  }
+  @keyframes flashBurst{ 0%{ opacity:.55; } 100%{ opacity:0; } }
 
-  /* full-screen ident bumper — covers the moment YouTube would otherwise
-     flash its own video title/channel attribution when playback starts */
   #bumper{
-    position:absolute;
-    inset:0;
-    z-index:25;
-    pointer-events:none;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:#08080b;
-    opacity:0;
+    position:absolute; inset:0; z-index:25; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+    background:#08080b; opacity:0;
   }
-  #bumper .bumper-logo{
-    font-family:'Anton', sans-serif;
-    font-size:clamp(28px, 6vw, 56px);
-    letter-spacing:2px;
-    color:var(--ink);
-  }
+  #bumper .bumper-logo{ font-family:'Anton', sans-serif; font-size:clamp(28px, 6vw, 56px); letter-spacing:2px; color:var(--ink); }
   #bumper .bumper-logo span{ color:var(--accent); }
+  #bumper .bumper-ch{
+    margin-top:10px; font-family:'JetBrains Mono', monospace; font-size:12px;
+    letter-spacing:3px; color:var(--ink-dim); text-transform:uppercase;
+  }
 
   /* ---------- TUNE-IN SPLASH ---------- */
   #splash{
-    position:absolute;
-    inset:0;
-    z-index:50;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:28px;
-    text-align:center;
-    background:
-      radial-gradient(ellipse at 50% 20%, var(--accent-dim), transparent 60%),
-      #08080b;
+    position:absolute; inset:0; z-index:50;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:28px; text-align:center;
+    background: radial-gradient(ellipse at 50% 20%, var(--accent-dim), transparent 60%), #08080b;
     transition: opacity .5s ease, visibility .5s ease;
   }
   #splash.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
-
-  .splash-logo{
-    font-family:'Anton', sans-serif;
-    font-size:clamp(40px, 9vw, 88px);
-    letter-spacing:2px;
-    line-height:.95;
-    color:var(--ink);
-  }
+  .splash-logo{ font-family:'Anton', sans-serif; font-size:clamp(40px, 9vw, 88px); letter-spacing:2px; line-height:.95; color:var(--ink); }
   .splash-logo span{ color:var(--accent); }
-
-  .splash-sub{
-    font-family:'JetBrains Mono', monospace;
-    font-size:12px;
-    letter-spacing:4px;
-    text-transform:uppercase;
-    color:var(--ink-dim);
-  }
-
-  .splash-nowplaying{
-    font-family:'Manrope', sans-serif;
-    font-size:14px;
-    color:var(--ink-dim);
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
+  .splash-sub{ font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:4px; text-transform:uppercase; color:var(--ink-dim); }
+  .splash-nowplaying{ font-size:14px; color:var(--ink-dim); display:flex; align-items:center; gap:8px; }
   .splash-nowplaying b{ color:var(--ink); font-weight:700; }
-
   #tuneBtn{
-    margin-top:8px;
-    font-family:'Anton', sans-serif;
-    font-size:18px;
-    letter-spacing:3px;
-    color:#08080b;
-    background:var(--accent);
-    border:none;
-    padding:16px 40px;
-    border-radius:999px;
-    cursor:pointer;
-    box-shadow:0 0 0 0 var(--accent-dim);
-    transition: transform .15s ease, box-shadow .3s ease;
+    margin-top:8px; font-family:'Anton', sans-serif; font-size:18px; letter-spacing:3px;
+    color:#08080b; background:var(--accent); border:none; padding:16px 40px; border-radius:999px;
+    cursor:pointer; box-shadow:0 0 0 0 var(--accent-dim); transition: transform .15s ease, box-shadow .3s ease;
   }
   #tuneBtn:hover{ transform:scale(1.04); box-shadow:0 0 40px 6px var(--accent-dim); }
   #tuneBtn:active{ transform:scale(0.98); }
 
-  /* ---------- CHANNEL BUG (top-left) ---------- */
+  /* ---------- ON-SCREEN CHROME (auto-hides) ---------- */
+  #chrome{ transition: opacity .5s ease; opacity:1; }
+  #chrome.faded{ opacity:0; }
+
   #bug{
-    position:absolute;
-    top:22px; left:22px;
-    z-index:15;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-family:'Anton', sans-serif;
-    letter-spacing:1px;
-    padding:8px 14px 8px 10px;
-    background:rgba(8,8,11,0.55);
-    backdrop-filter: blur(6px);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:8px;
+    position:absolute; top:22px; left:22px; z-index:15;
+    display:flex; align-items:center; gap:10px;
+    font-family:'Anton', sans-serif; letter-spacing:1px;
+    padding:8px 14px 8px 10px; background:rgba(8,8,11,0.55); backdrop-filter: blur(6px);
+    border:1px solid rgba(255,255,255,0.08); border-radius:8px;
   }
   #bug .num{
-    font-size:11px;
-    color:var(--accent);
-    font-family:'JetBrains Mono', monospace;
-    letter-spacing:0;
-    border-right:1px solid rgba(255,255,255,.15);
-    padding-right:9px;
+    font-size:11px; color:var(--accent); font-family:'JetBrains Mono', monospace;
+    letter-spacing:0; border-right:1px solid rgba(255,255,255,.15); padding-right:9px;
   }
   #bug .name{ font-size:15px; }
   #bug .name span{ color:var(--accent); }
 
   #live{
-    position:absolute;
-    top:22px; right:22px;
-    z-index:15;
-    display:flex;
-    align-items:center;
-    gap:14px;
-    font-family:'JetBrains Mono', monospace;
-    font-size:12px;
-    color:var(--ink-dim);
+    position:absolute; top:22px; right:22px; z-index:15;
+    display:flex; align-items:center; gap:14px;
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--ink-dim);
   }
-  #live .dot-wrap{
-    display:flex; align-items:center; gap:6px;
-    color:var(--red);
-    font-weight:700;
-    letter-spacing:1px;
-  }
-  #live .dot{
-    width:8px; height:8px; border-radius:50%;
-    background:var(--red);
-    animation: pulse 1.4s infinite ease-in-out;
-  }
+  #live .dot-wrap{ display:flex; align-items:center; gap:6px; color:var(--red); font-weight:700; letter-spacing:1px; }
+  #live .dot{ width:8px; height:8px; border-radius:50%; background:var(--red); animation: pulse 1.4s infinite ease-in-out; }
   @keyframes pulse{
     0%,100%{ opacity:1; box-shadow:0 0 0 0 rgba(255,46,77,.5); }
     50%{ opacity:.55; box-shadow:0 0 0 6px rgba(255,46,77,0); }
@@ -265,109 +145,78 @@
   #clock{ letter-spacing:1px; }
   #viewers{ letter-spacing:.5px; }
 
-  /* ---------- LOWER THIRD ---------- */
-  #lowerthird{
-    position:absolute;
-    left:0; right:0; bottom:0;
-    z-index:15;
-    display:flex;
-    flex-direction:column;
-    pointer-events:none;
+  #guideHint{
+    position:absolute; bottom:22px; left:50%; transform:translateX(-50%); z-index:15;
+    font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--ink-dim); background:rgba(8,8,11,0.5); backdrop-filter: blur(6px);
+    padding:7px 14px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center; gap:8px;
   }
+  #guideHint svg{ width:12px; height:12px; }
 
-  #nowbar{
-    margin:0 22px 10px 22px;
-    display:flex;
-    align-items:flex-end;
-    justify-content:space-between;
-    gap:20px;
-  }
-
+  #lowerthird{ position:absolute; left:0; right:0; bottom:60px; z-index:15; pointer-events:none; }
+  #nowbar{ margin:0 22px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; }
   #nowplaying-block{
-    background:rgba(8,8,11,0.62);
-    backdrop-filter: blur(8px);
-    border-left:4px solid var(--accent);
-    border-radius:4px;
-    padding:12px 18px;
-    max-width:70%;
+    background:rgba(8,8,11,0.62); backdrop-filter: blur(8px); border-left:4px solid var(--accent);
+    border-radius:4px; padding:12px 18px; max-width:70%;
   }
-  #np-eyebrow{
-    font-family:'JetBrains Mono', monospace;
-    font-size:10px;
-    letter-spacing:3px;
-    color:var(--accent);
-    text-transform:uppercase;
-    margin-bottom:4px;
-  }
-  #np-title{
-    font-family:'Anton', sans-serif;
-    font-size:clamp(20px,3.4vw,34px);
-    letter-spacing:.5px;
-    line-height:1;
-  }
-  #np-era{
-    margin-top:4px;
-    font-size:12px;
-    color:var(--ink-dim);
-    font-weight:600;
-  }
-
+  #np-eyebrow{ font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; margin-bottom:4px; }
+  #np-title{ font-family:'Anton', sans-serif; font-size:clamp(20px,3.4vw,34px); letter-spacing:.5px; line-height:1; }
+  #np-era{ margin-top:4px; font-size:12px; color:var(--ink-dim); font-weight:600; }
   #upnext-block{
-    background:rgba(8,8,11,0.5);
-    backdrop-filter: blur(8px);
-    border-radius:4px;
-    padding:10px 16px;
-    text-align:right;
-    min-width:180px;
+    background:rgba(8,8,11,0.5); backdrop-filter: blur(8px); border-radius:4px;
+    padding:10px 16px; text-align:right; min-width:180px;
   }
-  #un-eyebrow{
-    font-family:'JetBrains Mono', monospace;
-    font-size:9px;
-    letter-spacing:2px;
-    color:var(--ink-dim);
-    text-transform:uppercase;
-    margin-bottom:3px;
-  }
-  #un-title{
-    font-size:14px;
-    font-weight:700;
-  }
+  #upnext-block.hidden{ display:none; }
+  #un-eyebrow{ font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:2px; color:var(--ink-dim); text-transform:uppercase; margin-bottom:3px; }
+  #un-title{ font-size:14px; font-weight:700; }
 
-  /* ticker */
-  #ticker{
-    background:var(--ink);
-    color:#08080b;
-    display:flex;
-    align-items:center;
-    height:34px;
-    overflow:hidden;
-    white-space:nowrap;
+  /* ---------- CHANNEL GUIDE ---------- */
+  #guideBackdrop{
+    position:absolute; inset:0; z-index:40; background:rgba(0,0,0,0.5);
+    opacity:0; pointer-events:none; transition:opacity .35s ease;
   }
-  #ticker .ticker-label{
-    flex:0 0 auto;
-    height:100%;
-    display:flex;
-    align-items:center;
-    background:var(--red);
-    color:#fff;
-    font-family:'Anton', sans-serif;
-    font-size:12px;
-    letter-spacing:2px;
-    padding:0 16px;
+  #guideBackdrop.open{ opacity:1; pointer-events:auto; }
+
+  #guide{
+    position:absolute; top:0; right:0; bottom:0; z-index:41;
+    width:min(420px, 92vw); background:rgba(10,10,13,0.92); backdrop-filter: blur(14px);
+    border-left:1px solid rgba(255,255,255,0.08);
+    transform:translateX(100%); transition: transform .4s cubic-bezier(.22,.9,.32,1);
+    display:flex; flex-direction:column;
   }
-  #ticker-track{
-    display:inline-block;
-    padding-left:100%;
-    font-family:'JetBrains Mono', monospace;
-    font-size:12px;
-    font-weight:700;
-    letter-spacing:.5px;
-    animation: scrollTicker 42s linear infinite;
+  #guide.open{ transform:translateX(0); }
+
+  #guideHeader{
+    padding:22px 22px 14px 22px; border-bottom:1px solid rgba(255,255,255,0.08);
+    display:flex; align-items:center; justify-content:space-between;
   }
-  @keyframes scrollTicker{
-    0%{ transform:translateX(0); }
-    100%{ transform:translateX(-100%); }
+  #guideHeader h2{ font-family:'Anton', sans-serif; font-size:20px; letter-spacing:1px; }
+  #guideClose{
+    background:none; border:1px solid rgba(255,255,255,0.15); color:var(--ink-dim);
+    width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; line-height:1;
   }
+  #guideClose:hover{ color:var(--ink); border-color:rgba(255,255,255,0.35); }
+
+  #guideList{ flex:1; overflow-y:auto; padding:10px 0 24px 0; }
+  .guide-group-label{
+    font-family:'JetBrains Mono', monospace; font-size:10px; letter-spacing:3px; color:var(--ink-dim);
+    text-transform:uppercase; padding:16px 22px 8px 22px;
+  }
+  .guide-row{
+    display:flex; align-items:center; gap:14px; padding:11px 22px; cursor:pointer;
+    border-left:3px solid transparent; transition: background .15s ease;
+  }
+  .guide-row:hover{ background:rgba(255,255,255,0.04); }
+  .guide-row.active{ background:var(--accent-dim); border-left-color:var(--accent); }
+  .guide-ch-num{
+    font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--ink-dim);
+    width:38px; flex:0 0 auto;
+  }
+  .guide-row.active .guide-ch-num{ color:var(--accent); font-weight:700; }
+  .guide-ch-info{ flex:1; min-width:0; }
+  .guide-ch-name{ font-size:14px; font-weight:700; }
+  .guide-ch-now{ font-size:11px; color:var(--ink-dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   @media (max-width:640px){
     #bug .name{ font-size:12px; }
@@ -377,9 +226,8 @@
     #nowplaying-block{ max-width:100%; }
     #upnext-block{ text-align:left; }
     #np-title{ font-size:20px; }
+    #guideHint{ font-size:9px; padding:6px 12px; }
   }
-
-  .sr-only{ position:absolute; width:1px;height:1px; overflow:hidden; clip:rect(0,0,0,0); }
 </style>
 </head>
 <body>
@@ -393,42 +241,54 @@
     <div id="vignette"></div>
     <div id="static"></div>
     <div id="flash"></div>
-    <div id="bumper"><div class="bumper-logo">SWIFT <span>TV</span></div></div>
+    <div id="bumper"><div><div class="bumper-logo">TAY<span>TV</span></div><div class="bumper-ch" id="bumperCh"></div></div></div>
   </div>
 
-  <div id="bug">
-    <span class="num">CH.1989</span>
-    <span class="name">SWIFT <span>TV</span></span>
-  </div>
+  <div id="chrome">
+    <div id="bug">
+      <span class="num" id="bugNum">CH.1</span>
+      <span class="name">TAY<span>TV</span></span>
+    </div>
 
-  <div id="live">
-    <span class="dot-wrap"><span class="dot"></span> ON AIR</span>
-    <span id="viewers">— watching</span>
-    <span id="clock">--:--:--</span>
-  </div>
+    <div id="live">
+      <span class="dot-wrap"><span class="dot"></span> ON AIR</span>
+      <span id="viewers">— watching</span>
+      <span id="clock">--:--:--</span>
+    </div>
 
-  <div id="lowerthird">
-    <div id="nowbar">
-      <div id="nowplaying-block">
-        <div id="np-eyebrow">Now Broadcasting</div>
-        <div id="np-title">Tuning in…</div>
-        <div id="np-era"></div>
-      </div>
-      <div id="upnext-block">
-        <div id="un-eyebrow">Up Next</div>
-        <div id="un-title">—</div>
+    <div id="lowerthird">
+      <div id="nowbar">
+        <div id="nowplaying-block">
+          <div id="np-eyebrow">Now Broadcasting</div>
+          <div id="np-title">Tuning in…</div>
+          <div id="np-era"></div>
+        </div>
+        <div id="upnext-block">
+          <div id="un-eyebrow">Up Next</div>
+          <div id="un-title">—</div>
+        </div>
       </div>
     </div>
-    <div id="ticker">
-      <div class="ticker-label">SWIFT TV</div>
-      <div id="ticker-track">Loading broadcast feed…</div>
+
+    <div id="guideHint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      Scroll for Guide
     </div>
+  </div>
+
+  <div id="guideBackdrop"></div>
+  <div id="guide">
+    <div id="guideHeader">
+      <h2>CHANNEL GUIDE</h2>
+      <button id="guideClose">✕</button>
+    </div>
+    <div id="guideList"></div>
   </div>
 
   <div id="splash">
     <div class="splash-sub">You are tuning in to</div>
-    <div class="splash-logo">SWIFT <span>TV</span></div>
-    <div class="splash-sub">Channel 1989 · Broadcasting 24 Hours</div>
+    <div class="splash-logo">TAY<span>TV</span></div>
+    <div class="splash-sub">Broadcasting 24 Hours</div>
     <div class="splash-nowplaying">LIVE NOW: <b id="splash-current">—</b></div>
     <button id="tuneBtn">▶ Tune In</button>
     <div class="splash-sub" style="opacity:.5;font-size:10px;">This is a continuous broadcast — there is no pause button.</div>
@@ -438,107 +298,154 @@
 
 <script>
 /* =========================================================================
-   SWIFT TV — a 24/7 "always-on" broadcast channel.
-   Videos play on a fixed, wall-clock-driven schedule (like real live TV):
-   everyone who tunes in right now sees the same moment of the same video,
-   there's no pause/seek, and the channel just keeps rolling forever.
-
-   NOTE: video IDs are official YouTube uploads. If Taylor's team ever
-   swaps/removes one, the player auto-skips to the next video on error,
-   so the broadcast never actually goes dark.
+   TAYTV — a multi-channel, 24/7 "always-on" broadcast network.
+   Every channel runs on its own fixed, wall-clock-driven schedule (like
+   real live TV): whichever channel you tune to, you land mid-song, right
+   where the broadcast "actually is" — there's no pause/seek, and each
+   channel just keeps rolling forever.
    ========================================================================= */
 
-// ---- THE SCHEDULE ---------------------------------------------------
-// duration = approx runtime in seconds (only used to compute where to
-// "tune in" mid-video on load — actual advances are driven by the
-// real YouTube 'ended' event, so drift never accumulates for long).
-const PLAYLIST = [
-  { title:"Shake It Off (Taylor's Version)",      id:"M_JiMkVx0FU", duration:242, era:"1989",        accent:"#6EC9E0" },
-  { title:"You Belong With Me (Taylor's Version)", id:"H9WtMl3a5tA", duration:232, era:"Fearless",     accent:"#F4C95D" },
-  { title:"I Knew You Were Trouble (Taylor's Version)", id:"vqfqOfewMHg", duration:231, era:"Red",     accent:"#C81E3A" },
-  { title:"Blank Space",                          id:"e-ORhEE9VVg", duration:272, era:"1989",        accent:"#6EC9E0" },
-  { title:"Love Story (Taylor's Version)",        id:"lEMeFbxUZks", duration:236, era:"Fearless",     accent:"#F4C95D" },
-  { title:"Look What You Made Me Do",              id:"3tmd-ClpJxA", duration:258, era:"reputation",   accent:"#3a3a3a" },
-  { title:"Style (Taylor's Version)",             id:"2c3VO1u2acY", duration:231, era:"1989",        accent:"#6EC9E0" },
-  { title:"Bad Blood ft. Kendrick Lamar (Taylor's Version)", id:"nkvcA88QN_8", duration:214, era:"1989", accent:"#6EC9E0" },
-  { title:"We Are Never Ever Getting Back Together (Taylor's Version)", id:"eXRe4BcmD1w", duration:235, era:"Red", accent:"#C81E3A" },
-  { title:"cardigan",                             id:"K-a8s8OLBSE", duration:240, era:"folklore",     accent:"#8A9A8B" },
-  { title:"Wildest Dreams (Taylor's Version)",     id:"FKQXZo0nizg", duration:219, era:"1989",        accent:"#6EC9E0" },
-  { title:"willow",                               id:"RsEZmictANA", duration:214, era:"evermore",     accent:"#C97B4A" },
-  { title:"Anti-Hero",                            id:"b1kbLwvqugk", duration:213, era:"Midnights",    accent:"#8B7FD6" },
-  { title:"22 (Taylor's Version)",                id:"ZWHRrrEP-80", duration:233, era:"Red",          accent:"#C81E3A" },
-];
-
-const TOTAL_DURATION = PLAYLIST.reduce((s,v)=>s+v.duration,0);
-// Fixed broadcast epoch — the "channel" has notionally been running since this moment.
 const EPOCH = new Date('2024-01-01T00:00:00Z').getTime();
 
-const FACTS = [
-  "SWIFT TV IS BROADCASTING LIVE, 24 HOURS A DAY, SEVEN DAYS A WEEK",
-  "THIS CHANNEL CANNOT BE PAUSED — IT'S LIVE, JUST LIKE THE REAL THING",
-  "STAY TUNED FOR MORE FROM THE SWIFT TV VAULT",
-  "REFRESH YOUR BROWSER ANYTIME — YOU'LL JOIN THE BROADCAST RIGHT WHERE IT'S AT",
-  "SWIFT TV — CHANNEL 1989 — ALWAYS ON AIR",
-  "NO REMOTE NEEDED. NO PAUSE BUTTON. JUST THE BROADCAST.",
-];
+// ---- CHANNEL DEFINITIONS ----------------------------------------------
+// duration = approx runtime in seconds, only used to compute where to
+// "tune in" mid-song — actual advances are driven by the real YouTube
+// 'ended' event, so drift never accumulates for long.
+const CHANNELS = {
+  1: {
+    number:1, name:"Music Videos", group:"ON AIR NOW",
+    songs:[
+      { title:"Shake It Off (Taylor's Version)",      id:"M_JiMkVx0FU", duration:242, era:"1989",        accent:"#6EC9E0" },
+      { title:"You Belong With Me (Taylor's Version)", id:"H9WtMl3a5tA", duration:232, era:"Fearless",     accent:"#F4C95D" },
+      { title:"I Knew You Were Trouble (Taylor's Version)", id:"vqfqOfewMHg", duration:231, era:"Red",     accent:"#C81E3A" },
+      { title:"Blank Space",                          id:"e-ORhEE9VVg", duration:272, era:"1989",        accent:"#6EC9E0" },
+      { title:"Love Story (Taylor's Version)",        id:"lEMeFbxUZks", duration:236, era:"Fearless",     accent:"#F4C95D" },
+      { title:"Look What You Made Me Do",              id:"3tmd-ClpJxA", duration:258, era:"reputation",   accent:"#3a3a3a" },
+      { title:"Style (Taylor's Version)",             id:"2c3VO1u2acY", duration:231, era:"1989",        accent:"#6EC9E0" },
+      { title:"Bad Blood (Taylor's Version)",         id:"nkvcA88QN_8", duration:214, era:"1989",        accent:"#6EC9E0" },
+      { title:"We Are Never Ever Getting Back Together (Taylor's Version)", id:"eXRe4BcmD1w", duration:235, era:"Red", accent:"#C81E3A" },
+      { title:"cardigan",                             id:"K-a8s8OLBSE", duration:240, era:"folklore",     accent:"#8A9A8B" },
+      { title:"Wildest Dreams (Taylor's Version)",     id:"FKQXZo0nizg", duration:219, era:"1989",        accent:"#6EC9E0" },
+      { title:"willow",                               id:"RsEZmictANA", duration:214, era:"evermore",     accent:"#C97B4A" },
+      { title:"Anti-Hero",                            id:"b1kbLwvqugk", duration:213, era:"Midnights",    accent:"#8B7FD6" },
+      { title:"22 (Taylor's Version)",                id:"ZWHRrrEP-80", duration:233, era:"Red",          accent:"#C81E3A" },
+    ]
+  },
+  2: {
+    number:2, name:"Audio — All Eras", group:"ON AIR NOW",
+    songs:[
+      { title:"Tim McGraw (Audio)",                   id:"knBs-3EVdI4", duration:232, era:"Taylor Swift", accent:"#c9b79c" },
+      { title:"Love Story (Taylor's Version)",        id:"lEMeFbxUZks", duration:236, era:"Fearless",     accent:"#F4C95D" },
+      { title:"Enchanted (Taylor's Version)",         id:"7IID5YLPg7w", duration:352, era:"Speak Now",    accent:"#9E5BC9" },
+      { title:"All Too Well (Taylor's Version)",      id:"rX9GLnJ06F4", duration:329, era:"Red",          accent:"#C81E3A" },
+      { title:"Blank Space",                          id:"e-ORhEE9VVg", duration:272, era:"1989",        accent:"#6EC9E0" },
+      { title:"Look What You Made Me Do (Audio)",      id:"I3Fr6iKX7VI", duration:211, era:"reputation",   accent:"#3a3a3a" },
+      { title:"Cruel Summer (Official Audio)",        id:"ic8j13piAhQ", duration:178, era:"Lover",        accent:"#FF8FCF" },
+      { title:"cardigan",                             id:"K-a8s8OLBSE", duration:240, era:"folklore",     accent:"#8A9A8B" },
+      { title:"willow",                               id:"RsEZmictANA", duration:214, era:"evermore",     accent:"#C97B4A" },
+      { title:"Anti-Hero (Official Audio)",           id:"gGwN25z7FrE", duration:200, era:"Midnights",    accent:"#8B7FD6" },
+      { title:"Fortnight (Official Audio)",           id:"eXrmLd5mer4", duration:228, era:"TTPD",         accent:"#8f8f8f" },
+      { title:"The Fate of Ophelia (Official Audio)", id:"7nVctvQVz0U", duration:226, era:"Showgirl",     accent:"#FF7A1A" },
+    ]
+  },
+  3: {
+    number:3, name:"Lyric Videos", group:"ON AIR NOW",
+    songs:[
+      { title:"Look What You Made Me Do (Lyrics)", id:"3K0RzZGpyds", duration:211, era:"reputation", accent:"#3a3a3a" },
+      { title:"ME! (Lyrics)",                       id:"S--WI8PUVVo", duration:193, era:"Lover",      accent:"#FF8FCF" },
+      { title:"cardigan (Lyrics)",                  id:"zLSUp53y-HQ", duration:240, era:"folklore",   accent:"#8A9A8B" },
+      { title:"willow (Lyrics)",                    id:"7EvwIw4gIyk", duration:214, era:"evermore",   accent:"#C97B4A" },
+      { title:"Anti-Hero (Lyrics)",                 id:"XqN2qFvY64U", duration:200, era:"Midnights",  accent:"#8B7FD6" },
+      { title:"Fortnight (Lyrics)",                 id:"HzsQHfBA3MY", duration:228, era:"TTPD",       accent:"#8f8f8f" },
+      { title:"The Fate of Ophelia (Lyrics)",       id:"rbmdfEQODOw", duration:226, era:"Showgirl",   accent:"#FF7A1A" },
+    ]
+  },
+  101:{ number:101, name:"Taylor Swift",   group:"ALBUM RADIO", songs:[{ title:"Tim McGraw (Audio)", id:"knBs-3EVdI4", duration:232, era:"Taylor Swift", accent:"#c9b79c" }] },
+  102:{ number:102, name:"Fearless",       group:"ALBUM RADIO", songs:[{ title:"Love Story (Taylor's Version)", id:"lEMeFbxUZks", duration:236, era:"Fearless", accent:"#F4C95D" }] },
+  103:{ number:103, name:"Speak Now",      group:"ALBUM RADIO", songs:[{ title:"Enchanted (Taylor's Version)", id:"7IID5YLPg7w", duration:352, era:"Speak Now", accent:"#9E5BC9" }] },
+  104:{ number:104, name:"Red",            group:"ALBUM RADIO", songs:[{ title:"All Too Well (Taylor's Version)", id:"rX9GLnJ06F4", duration:329, era:"Red", accent:"#C81E3A" }] },
+  105:{ number:105, name:"1989",           group:"ALBUM RADIO", songs:[{ title:"Blank Space", id:"e-ORhEE9VVg", duration:272, era:"1989", accent:"#6EC9E0" }] },
+  106:{ number:106, name:"reputation",     group:"ALBUM RADIO", songs:[{ title:"Look What You Made Me Do (Audio)", id:"I3Fr6iKX7VI", duration:211, era:"reputation", accent:"#3a3a3a" }] },
+  107:{ number:107, name:"Lover",          group:"ALBUM RADIO", songs:[{ title:"Cruel Summer (Official Audio)", id:"ic8j13piAhQ", duration:178, era:"Lover", accent:"#FF8FCF" }] },
+  108:{ number:108, name:"folklore",       group:"ALBUM RADIO", songs:[{ title:"cardigan", id:"K-a8s8OLBSE", duration:240, era:"folklore", accent:"#8A9A8B" }] },
+  109:{ number:109, name:"evermore",       group:"ALBUM RADIO", songs:[{ title:"willow", id:"RsEZmictANA", duration:214, era:"evermore", accent:"#C97B4A" }] },
+  110:{ number:110, name:"Midnights",      group:"ALBUM RADIO", songs:[{ title:"Anti-Hero (Official Audio)", id:"gGwN25z7FrE", duration:200, era:"Midnights", accent:"#8B7FD6" }] },
+  111:{ number:111, name:"The Tortured Poets Department", group:"ALBUM RADIO", songs:[{ title:"Fortnight (Official Audio)", id:"eXrmLd5mer4", duration:228, era:"TTPD", accent:"#8f8f8f" }] },
+  112:{ number:112, name:"The Life of a Showgirl", group:"ALBUM RADIO", songs:[{ title:"The Fate of Ophelia (Official Audio)", id:"7nVctvQVz0U", duration:226, era:"Showgirl", accent:"#FF7A1A" }] },
+  208:{ number:208, name:"folklore",       group:"ALBUM LYRICS", songs:[{ title:"cardigan (Lyrics)", id:"zLSUp53y-HQ", duration:240, era:"folklore", accent:"#8A9A8B" }] },
+  209:{ number:209, name:"evermore",       group:"ALBUM LYRICS", songs:[{ title:"willow (Lyrics)", id:"7EvwIw4gIyk", duration:214, era:"evermore", accent:"#C97B4A" }] },
+  210:{ number:210, name:"Midnights",      group:"ALBUM LYRICS", songs:[{ title:"Anti-Hero (Lyrics)", id:"XqN2qFvY64U", duration:200, era:"Midnights", accent:"#8B7FD6" }] },
+  211:{ number:211, name:"The Tortured Poets Department", group:"ALBUM LYRICS", songs:[{ title:"Fortnight (Lyrics)", id:"HzsQHfBA3MY", duration:228, era:"TTPD", accent:"#8f8f8f" }] },
+  212:{ number:212, name:"The Life of a Showgirl", group:"ALBUM LYRICS", songs:[{ title:"The Fate of Ophelia (Lyrics)", id:"rbmdfEQODOw", duration:226, era:"Showgirl", accent:"#FF7A1A" }] },
+};
 
-// ---- SCHEDULE MATH ---------------------------------------------------
-function getBroadcastState(atTime){
-  const elapsed = ((atTime - EPOCH) / 1000) % TOTAL_DURATION;
+const GUIDE_ORDER = [
+  { label:"ON AIR NOW", ids:[1,2,3] },
+  { label:"ALBUM RADIO", ids:[101,102,103,104,105,106,107,108,109,110,111,112] },
+  { label:"ALBUM LYRICS", ids:[208,209,210,211,212] },
+];
+const ALL_CHANNEL_IDS = GUIDE_ORDER.flatMap(g=>g.ids);
+
+// ---- SCHEDULE MATH ------------------------------------------------------
+function getBroadcastState(songs, atTime){
+  const total = songs.reduce((s,v)=>s+v.duration,0);
+  const elapsed = ((atTime - EPOCH) / 1000) % total;
   let acc = 0;
-  for(let i=0;i<PLAYLIST.length;i++){
-    const v = PLAYLIST[i];
-    if(elapsed < acc + v.duration){
-      return { index:i, offset: elapsed - acc, startedAt: atTime - (elapsed-acc)*1000 };
+  for(let i=0;i<songs.length;i++){
+    if(elapsed < acc + songs[i].duration){
+      return { index:i, offset: elapsed - acc };
     }
-    acc += v.duration;
+    acc += songs[i].duration;
   }
-  return { index:0, offset:0, startedAt: atTime };
+  return { index:0, offset:0 };
 }
 
-// ---- DOM refs ----------------------------------------------------------
+// ---- DOM refs -------------------------------------------------------------
 const $ = (id)=>document.getElementById(id);
-const npTitle = $('np-title'), npEra = $('np-era'), unTitle = $('un-title');
+const npTitle = $('np-title'), npEra = $('np-era'), unTitle = $('un-title'), upnextBlock = $('upnext-block');
 const splashCurrent = $('splash-current'), clockEl = $('clock'), viewersEl = $('viewers');
-const tickerTrack = $('ticker-track');
 const staticEl = $('static'), flashEl = $('flash');
-const bumperEl = $('bumper');
+const bumperEl = $('bumper'), bumperCh = $('bumperCh');
+const bugNum = $('bugNum');
+const chromeEl = $('chrome');
 const root = document.documentElement;
 
-function showBumper(holdMs){
+function showBumper(holdMs, channel){
+  bumperCh.textContent = "CH. " + channel.number + " · " + channel.name;
   bumperEl.style.transition = 'none';
   bumperEl.style.opacity = '1';
-  void bumperEl.offsetWidth; // force reflow so the instant show isn't tweened
+  void bumperEl.offsetWidth;
   setTimeout(()=>{
     bumperEl.style.transition = 'opacity .6s ease';
     bumperEl.style.opacity = '0';
   }, holdMs);
 }
 
-function applyEra(video){
-  root.style.setProperty('--accent', video.accent);
-  root.style.setProperty('--accent-dim', video.accent + '33');
+function applyEra(song){
+  root.style.setProperty('--accent', song.accent);
+  root.style.setProperty('--accent-dim', song.accent + '33');
 }
 
-function renderNowPlaying(index){
-  const v = PLAYLIST[index];
-  const next = PLAYLIST[(index+1) % PLAYLIST.length];
-  applyEra(v);
-  npTitle.textContent = v.title;
-  npEra.textContent = "TAYLOR SWIFT · " + v.era + " ERA";
-  unTitle.textContent = next.title;
-  splashCurrent.textContent = v.title;
-  document.title = "🔴 " + v.title + " — SWIFT TV";
+function renderNowPlaying(){
+  const channel = CHANNELS[currentChannelNum];
+  const songs = channel.songs;
+  const song = songs[currentIndex];
+  const next = songs[(currentIndex+1) % songs.length];
+  applyEra(song);
+  bugNum.textContent = "CH." + channel.number;
+  npTitle.textContent = song.title;
+  npEra.textContent = "CH." + channel.number + " · " + channel.name + " · " + song.era;
+  if(songs.length > 1){
+    upnextBlock.classList.remove('hidden');
+    unTitle.textContent = next.title;
+  } else {
+    upnextBlock.classList.add('hidden');
+  }
+  splashCurrent.textContent = song.title + " — CH." + channel.number;
+  document.title = "🔴 CH." + channel.number + " " + song.title + " — TAYTV";
 }
 
-// ---- Ticker: rotate through facts + full lineup -----------------------
-function buildTickerText(){
-  const lineup = PLAYLIST.map(v=>v.title.toUpperCase()).join("   •   ");
-  return [...FACTS, "COMING UP: " + lineup].join("     ★     ");
-}
-tickerTrack.textContent = buildTickerText();
-
-// ---- Clock + fake viewer count -----------------------------------------
+// ---- Clock + fake viewer count ---------------------------------------
 function tickClock(){
   clockEl.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
@@ -555,54 +462,44 @@ setInterval(tickViewers, 2500);
 tickViewers();
 
 // initial "what's on now" for the splash screen, before the user even taps in
-renderNowPlaying(getBroadcastState(Date.now()).index);
+let currentChannelNum = 1;
+let currentIndex = getBroadcastState(CHANNELS[1].songs, Date.now()).index;
+renderNowPlaying();
 
 // ---- YouTube IFrame API -------------------------------------------------
 let player = null;
-let currentIndex = 0;
 let resyncInterval = null;
+// Songs that turn out broken/non-embeddable get blacklisted per-channel for
+// the rest of the session, so a channel just routes around them forever.
+const deadIndices = {};
+function deadSet(chNum){ if(!deadIndices[chNum]) deadIndices[chNum] = new Set(); return deadIndices[chNum]; }
 
 window.onYouTubeIframeAPIReady = function(){ /* player created on tune-in */ };
-
-function loadYT(){
+(function loadYT(){
   const tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
   document.body.appendChild(tag);
-}
-loadYT();
+})();
 
 function createPlayer(){
-  const state = getBroadcastState(Date.now());
+  const channel = CHANNELS[currentChannelNum];
+  const state = getBroadcastState(channel.songs, Date.now());
   currentIndex = state.index;
-  renderNowPlaying(currentIndex);
-  showBumper(2200);
+  renderNowPlaying();
+  showBumper(2200, channel);
 
   player = new YT.Player('playerFrame', {
     host: 'https://www.youtube-nocookie.com',
-    videoId: PLAYLIST[currentIndex].id,
+    videoId: channel.songs[currentIndex].id,
     playerVars: {
-      autoplay: 1,
-      controls: 0,
-      disablekb: 1,
-      modestbranding: 1,
-      rel: 0,
-      fs: 0,
-      iv_load_policy: 3,
-      cc_load_policy: 0,
-      playsinline: 1,
-      start: Math.floor(state.offset),
-      origin: window.location.origin
+      autoplay: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, fs: 0,
+      iv_load_policy: 3, cc_load_policy: 0, playsinline: 1,
+      start: Math.floor(state.offset), origin: window.location.origin
     },
     events: {
-      onReady: (e)=>{
-        e.target.playVideo();
-        startResync();
-      },
+      onReady: (e)=>{ e.target.playVideo(); startResync(); },
       onStateChange: onPlayerStateChange,
       onApiChange: (e)=>{
-        // Officially documented way to force captions off — calling
-        // unloadModule too early (before the module reports itself
-        // available) is unreliable, so we wait for this event instead.
         try{
           const opts = e.target.getOptions();
           if(opts && opts.indexOf && opts.indexOf('captions') !== -1){
@@ -617,77 +514,77 @@ function createPlayer(){
 }
 
 function onPlayerStateChange(e){
-  // 0 = ended
-  if(e.data === YT.PlayerState.ENDED){
-    advanceToNext(false);
-  }
-  // Live TV can't be paused — if something pauses it, resume immediately.
-  if(e.data === YT.PlayerState.PAUSED){
-    e.target.playVideo();
-  }
+  if(e.data === YT.PlayerState.ENDED) advanceToNext(false);
+  if(e.data === YT.PlayerState.PAUSED) e.target.playVideo(); // live TV can't be paused
 }
 
 function transitionBurst(){
   staticEl.classList.remove('burst'); flashEl.classList.remove('burst');
-  void staticEl.offsetWidth; // restart animation
+  void staticEl.offsetWidth;
   staticEl.classList.add('burst'); flashEl.classList.add('burst');
 }
 
-// Videos that turn out to be broken or non-embeddable get blacklisted for
-// the rest of this session, so the channel just quietly routes around them
-// forever instead of ever getting stuck.
-const deadIndices = new Set();
-
-function nextLiveIndex(fromIndex){
-  if(deadIndices.size >= PLAYLIST.length) return -1; // everything's down
+function nextLiveIndex(chNum, fromIndex){
+  const songs = CHANNELS[chNum].songs;
+  const dead = deadSet(chNum);
+  if(dead.size >= songs.length) return -1;
   let i = fromIndex;
-  do{
-    i = (i + 1) % PLAYLIST.length;
-  } while(deadIndices.has(i));
+  do{ i = (i + 1) % songs.length; } while(dead.has(i));
   return i;
 }
 
 function advanceToNext(fromError){
-  if(fromError) deadIndices.add(currentIndex);
-
-  const next = nextLiveIndex(currentIndex);
+  if(fromError) deadSet(currentChannelNum).add(currentIndex);
+  const next = nextLiveIndex(currentChannelNum, currentIndex);
   if(next === -1){
     npTitle.textContent = "Technical Difficulties";
     npEra.textContent = "Please check back shortly";
     return;
   }
-
   transitionBurst();
   currentIndex = next;
-  renderNowPlaying(currentIndex);
-  showBumper(2200);
+  const channel = CHANNELS[currentChannelNum];
+  renderNowPlaying();
+  showBumper(2200, channel);
   setTimeout(()=>{
     if(player && player.loadVideoById){
-      player.loadVideoById({ videoId: PLAYLIST[currentIndex].id, startSeconds: 0 });
+      player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: 0 });
     }
   }, fromError ? 400 : 250);
 }
 
-// Keep the broadcast honest to the wall clock — if a viewer's tab throttles
-// in the background, snap back to where the "live" feed actually is.
+// Keep the broadcast honest to the wall clock on the current channel.
 function startResync(){
   if(resyncInterval) clearInterval(resyncInterval);
   resyncInterval = setInterval(()=>{
     if(!player || !player.getCurrentTime) return;
-    const state = getBroadcastState(Date.now());
-    if(state.index !== currentIndex && !deadIndices.has(state.index)){
-      // a full song has rolled over while we were away — jump to live
+    const channel = CHANNELS[currentChannelNum];
+    const state = getBroadcastState(channel.songs, Date.now());
+    if(state.index !== currentIndex && !deadSet(currentChannelNum).has(state.index)){
       currentIndex = state.index;
-      renderNowPlaying(currentIndex);
-      showBumper(2200);
-      player.loadVideoById({ videoId: PLAYLIST[currentIndex].id, startSeconds: Math.floor(state.offset) });
+      renderNowPlaying();
+      showBumper(2200, channel);
+      player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
       return;
     }
     const drift = Math.abs(player.getCurrentTime() - state.offset);
-    if(drift > 4){
-      player.seekTo(state.offset, true);
-    }
+    if(drift > 4) player.seekTo(state.offset, true);
   }, 5000);
+}
+
+function tuneToChannel(num){
+  if(num === currentChannelNum) return;
+  currentChannelNum = num;
+  const channel = CHANNELS[num];
+  const state = getBroadcastState(channel.songs, Date.now());
+  currentIndex = state.index;
+  transitionBurst();
+  renderNowPlaying();
+  showBumper(2200, channel);
+  if(player && player.loadVideoById){
+    player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
+  }
+  renderGuideList();
 }
 
 // ---- Interaction shield: no pausing, no seeking, no right-click --------
@@ -698,14 +595,90 @@ document.addEventListener('keydown', (e)=>{
   if([' ','k','K','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
 });
 
+// ---- Auto-hiding chrome: bug / live badge / lower third ----------------
+let chromeTimer = null;
+function wakeChrome(){
+  chromeEl.classList.remove('faded');
+  clearTimeout(chromeTimer);
+  chromeTimer = setTimeout(()=> chromeEl.classList.add('faded'), 3800);
+}
+['mousemove','mousedown','touchstart','keydown'].forEach(evt=>{
+  document.addEventListener(evt, wakeChrome, {passive:true});
+});
+wakeChrome();
+
+// ---- Channel guide: opens on scroll (wheel) or swipe --------------------
+const guideEl = $('guide'), guideBackdrop = $('guideBackdrop'), guideList = $('guideList');
+let guideTimer = null;
+
+function renderGuideList(){
+  guideList.innerHTML = '';
+  GUIDE_ORDER.forEach(group=>{
+    const label = document.createElement('div');
+    label.className = 'guide-group-label';
+    label.textContent = group.label;
+    guideList.appendChild(label);
+    group.ids.forEach(id=>{
+      const channel = CHANNELS[id];
+      const state = getBroadcastState(channel.songs, Date.now());
+      const nowSong = channel.songs[state.index];
+      const row = document.createElement('div');
+      row.className = 'guide-row' + (id === currentChannelNum ? ' active' : '');
+      row.innerHTML =
+        '<div class="guide-ch-num">' + id + '</div>' +
+        '<div class="guide-ch-info">' +
+          '<div class="guide-ch-name">' + channel.name + '</div>' +
+          '<div class="guide-ch-now">NOW: ' + nowSong.title + '</div>' +
+        '</div>';
+      row.addEventListener('click', ()=>{ tuneToChannel(id); closeGuide(); });
+      guideList.appendChild(row);
+    });
+  });
+}
+
+function openGuide(){
+  renderGuideList();
+  guideEl.classList.add('open');
+  guideBackdrop.classList.add('open');
+  clearTimeout(guideTimer);
+  guideTimer = setTimeout(closeGuide, 6000);
+}
+function closeGuide(){
+  guideEl.classList.remove('open');
+  guideBackdrop.classList.remove('open');
+  clearTimeout(guideTimer);
+}
+function guideIsOpen(){ return guideEl.classList.contains('open'); }
+
+window.addEventListener('wheel', (e)=>{
+  if(guideEl.contains(e.target)) return; // let internal list scroll normally
+  openGuide();
+}, {passive:true});
+
+let touchStartY = null;
+window.addEventListener('touchstart', (e)=>{
+  if(guideEl.contains(e.target)) return;
+  touchStartY = e.touches[0].clientY;
+}, {passive:true});
+window.addEventListener('touchmove', (e)=>{
+  if(touchStartY === null || guideEl.contains(e.target)) return;
+  const dy = touchStartY - e.touches[0].clientY;
+  if(Math.abs(dy) > 40){ openGuide(); touchStartY = null; }
+}, {passive:true});
+
+guideList.addEventListener('mouseenter', ()=> clearTimeout(guideTimer));
+guideList.addEventListener('mouseleave', ()=>{
+  clearTimeout(guideTimer);
+  guideTimer = setTimeout(closeGuide, 6000);
+});
+$('guideClose').addEventListener('click', closeGuide);
+guideBackdrop.addEventListener('click', closeGuide);
+
 // ---- Tune-in splash ------------------------------------------------------
 $('tuneBtn').addEventListener('click', ()=>{
   $('splash').classList.add('hidden');
-  if(window.YT && window.YT.Player){
-    createPlayer();
-  } else {
-    window.onYouTubeIframeAPIReady = createPlayer;
-  }
+  if(window.YT && window.YT.Player){ createPlayer(); }
+  else { window.onYouTubeIframeAPIReady = createPlayer; }
 });
 </script>
 
