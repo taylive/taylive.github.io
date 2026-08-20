@@ -43,33 +43,43 @@
     align-items:center;
     justify-content:center;
     background:#000;
+    overflow:hidden; /* clips the zoomed video below so it can't spill out */
   }
 
-  #playerFrame{ position:absolute; inset:0; width:100%; height:100%; }
+  /* Zoom-and-crop: the video is rendered ~11% taller than its box and
+     shifted up, so the top ~9% (YouTube's hover title bar) and bottom ~1%
+     (a sliver of its own info text) get pushed outside the visible frame
+     and clipped by #stage's overflow:hidden — same idea as a browser zoom,
+     just applied to only the video. The bottom crop is kept small on
+     purpose: the "Skip Ad" button lives close to that same edge, and
+     cropping enough to fully hide YouTube's tiny "Sponsored..." text next
+     to it would risk cropping the Skip button too, so this leans toward
+     keeping Skip clickable over hiding that last bit of text. */
+  #playerFrame{ position:absolute; left:0; width:100%; top:-10%; height:111.11%; }
   #playerFrame iframe{ width:100%; height:100%; pointer-events:auto; }
 
   /* The shield blocks the whole video (no pause, no seek, no hover-triggered
      YouTube UI) except a small notch cut out with clip-path where the
-     "Skip Ad" button renders (measured off a screenshot: ~150x72px, with
-     a bit of margin off the bottom-right corner rather than flush against
-     it) — clicks there fall straight through the shield to the iframe
-     underneath. We can't detect whether an ad is actually on screen (that's
-     not exposed across the cross-origin iframe boundary), so that notch is
-     *always* click-through. If someone taps it during normal content it can
-     toggle play/pause for a moment, but onPlayerStateChange below
-     force-resumes the instant that happens, so it self-corrects almost
-     immediately. */
+     "Skip Ad" button renders. Its position here is shifted from the raw
+     screenshot measurement to account for the zoom-and-crop above, which
+     moves everything in the video slightly — clicks in the notch fall
+     straight through the shield to the iframe underneath. We can't detect
+     whether an ad is actually on screen (that's not exposed across the
+     cross-origin iframe boundary), so that notch is *always* click-through.
+     If someone taps it during normal content it can toggle play/pause for
+     a moment, but onPlayerStateChange below force-resumes the instant that
+     happens, so it self-corrects almost immediately. */
   #shield{
     position:absolute; inset:0; z-index:5; cursor:default; background:transparent;
     clip-path: polygon(
       0 0, 100% 0,
-      100% calc(100% - 104px),
-      calc(100% - 24px) calc(100% - 104px),
-      calc(100% - 174px) calc(100% - 104px),
-      calc(100% - 174px) calc(100% - 32px),
-      calc(100% - 24px) calc(100% - 32px),
-      calc(100% - 24px) calc(100% - 104px),
-      100% calc(100% - 32px),
+      100% calc(100% - 75px),
+      calc(100% - 24px) calc(100% - 75px),
+      calc(100% - 174px) calc(100% - 75px),
+      calc(100% - 174px) calc(100% - 20px),
+      calc(100% - 24px) calc(100% - 20px),
+      calc(100% - 24px) calc(100% - 75px),
+      100% calc(100% - 20px),
       100% 100%,
       0 100%
     );
@@ -237,13 +247,13 @@
     #shield{
       clip-path: polygon(
         0 0, 100% 0,
-        100% calc(100% - 72px),
-        calc(100% - 16px) calc(100% - 72px),
-        calc(100% - 106px) calc(100% - 72px),
-        calc(100% - 106px) calc(100% - 24px),
-        calc(100% - 16px) calc(100% - 24px),
-        calc(100% - 16px) calc(100% - 72px),
-        100% calc(100% - 24px),
+        100% calc(100% - 54px),
+        calc(100% - 16px) calc(100% - 54px),
+        calc(100% - 106px) calc(100% - 54px),
+        calc(100% - 106px) calc(100% - 14px),
+        calc(100% - 16px) calc(100% - 14px),
+        calc(100% - 16px) calc(100% - 54px),
+        100% calc(100% - 14px),
         100% 100%,
         0 100%
       );
