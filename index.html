@@ -126,6 +126,27 @@
     100%{ opacity:0; }
   }
 
+  /* full-screen ident bumper — covers the moment YouTube would otherwise
+     flash its own video title/channel attribution when playback starts */
+  #bumper{
+    position:absolute;
+    inset:0;
+    z-index:25;
+    pointer-events:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#08080b;
+    opacity:0;
+  }
+  #bumper .bumper-logo{
+    font-family:'Anton', sans-serif;
+    font-size:clamp(28px, 6vw, 56px);
+    letter-spacing:2px;
+    color:var(--ink);
+  }
+  #bumper .bumper-logo span{ color:var(--accent); }
+
   /* ---------- TUNE-IN SPLASH ---------- */
   #splash{
     position:absolute;
@@ -372,6 +393,7 @@
     <div id="vignette"></div>
     <div id="static"></div>
     <div id="flash"></div>
+    <div id="bumper"><div class="bumper-logo">SWIFT <span>TV</span></div></div>
   </div>
 
   <div id="bug">
@@ -480,7 +502,18 @@ const npTitle = $('np-title'), npEra = $('np-era'), unTitle = $('un-title');
 const splashCurrent = $('splash-current'), clockEl = $('clock'), viewersEl = $('viewers');
 const tickerTrack = $('ticker-track');
 const staticEl = $('static'), flashEl = $('flash');
+const bumperEl = $('bumper');
 const root = document.documentElement;
+
+function showBumper(holdMs){
+  bumperEl.style.transition = 'none';
+  bumperEl.style.opacity = '1';
+  void bumperEl.offsetWidth; // force reflow so the instant show isn't tweened
+  setTimeout(()=>{
+    bumperEl.style.transition = 'opacity .6s ease';
+    bumperEl.style.opacity = '0';
+  }, holdMs);
+}
 
 function applyEra(video){
   root.style.setProperty('--accent', video.accent);
@@ -542,8 +575,10 @@ function createPlayer(){
   const state = getBroadcastState(Date.now());
   currentIndex = state.index;
   renderNowPlaying(currentIndex);
+  showBumper(2200);
 
   player = new YT.Player('playerFrame', {
+    host: 'https://www.youtube-nocookie.com',
     videoId: PLAYLIST[currentIndex].id,
     playerVars: {
       autoplay: 1,
@@ -561,10 +596,21 @@ function createPlayer(){
     events: {
       onReady: (e)=>{
         e.target.playVideo();
-        try{ e.target.unloadModule('captions'); }catch(err){}
         startResync();
       },
       onStateChange: onPlayerStateChange,
+      onApiChange: (e)=>{
+        // Officially documented way to force captions off — calling
+        // unloadModule too early (before the module reports itself
+        // available) is unreliable, so we wait for this event instead.
+        try{
+          const opts = e.target.getOptions();
+          if(opts && opts.indexOf && opts.indexOf('captions') !== -1){
+            e.target.setOption('captions', 'track', {});
+            e.target.unloadModule('captions');
+          }
+        }catch(err){}
+      },
       onError: ()=> advanceToNext(true)
     }
   });
@@ -614,10 +660,10 @@ function advanceToNext(fromError){
   transitionBurst();
   currentIndex = next;
   renderNowPlaying(currentIndex);
+  showBumper(2200);
   setTimeout(()=>{
     if(player && player.loadVideoById){
       player.loadVideoById({ videoId: PLAYLIST[currentIndex].id, startSeconds: 0 });
-      try{ player.unloadModule('captions'); }catch(err){}
     }
   }, fromError ? 400 : 250);
 }
@@ -633,6 +679,7 @@ function startResync(){
       // a full song has rolled over while we were away — jump to live
       currentIndex = state.index;
       renderNowPlaying(currentIndex);
+      showBumper(2200);
       player.loadVideoById({ videoId: PLAYLIST[currentIndex].id, startSeconds: Math.floor(state.offset) });
       return;
     }
