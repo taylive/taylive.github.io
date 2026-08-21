@@ -61,31 +61,11 @@
      of #stage and needs to recompute on resize. */
   #playerFrame iframe{ position:absolute; pointer-events:auto; }
 
-  /* The shield blocks the whole video (no pause, no seek, no hover-triggered
-     YouTube UI) except a small notch cut out with clip-path where the
-     "Skip Ad" button renders. Its position here is shifted from the raw
-     screenshot measurement to account for the zoom-and-crop above, which
-     moves everything in the video slightly — clicks in the notch fall
-     straight through the shield to the iframe underneath. We can't detect
-     whether an ad is actually on screen (that's not exposed across the
-     cross-origin iframe boundary), so that notch is *always* click-through.
-     If someone taps it during normal content it can toggle play/pause for
-     a moment, but onPlayerStateChange below force-resumes the instant that
-     happens, so it self-corrects almost immediately. */
+  /* Full-coverage shield: blocks all clicks/hover on the video (no pause,
+     no seek, no hover-triggered YouTube UI, no way to click Skip Ad —
+     ads are instead escaped via the Refresh button, see refreshStream()). */
   #shield{
     position:absolute; inset:0; z-index:5; cursor:default; background:transparent;
-    clip-path: polygon(
-      0 0, 100% 0,
-      100% calc(100% - 75px),
-      calc(100% - 24px) calc(100% - 75px),
-      calc(100% - 174px) calc(100% - 75px),
-      calc(100% - 174px) calc(100% - 20px),
-      calc(100% - 24px) calc(100% - 20px),
-      calc(100% - 24px) calc(100% - 75px),
-      100% calc(100% - 20px),
-      100% 100%,
-      0 100%
-    );
   }
 
   /* Brief black fade used only for channel-change transitions */
@@ -138,15 +118,31 @@
   #viewers{ letter-spacing:.5px; }
 
   /* ---------- REMOTE-STYLE VOLUME / CHANNEL CONTROLS ---------- */
+  #chCtrlGroup{
+    position:absolute; top:50%; right:16px; transform:translateY(-50%); z-index:16;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
   .tvctrl{
-    position:absolute; top:50%; transform:translateY(-50%); z-index:16;
     display:flex; flex-direction:column; align-items:center;
     background:var(--panel);
     border:1px solid rgba(255,255,255,0.12); border-radius:16px;
     width:50px; overflow:hidden;
   }
-  .tvctrl-left{ left:16px; }
-  .tvctrl-right{ right:16px; }
+  .tvctrl-left{ position:absolute; top:50%; left:16px; transform:translateY(-50%); z-index:16; }
+  .tvctrl-refresh{
+    background:var(--panel); border:1px solid rgba(255,255,255,0.12); border-radius:16px;
+    width:50px; padding:10px 0 9px 0; cursor:pointer; color:var(--ink-dim);
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .tvctrl-refresh:hover{ background:rgba(255,255,255,0.08); color:var(--ink); }
+  .tvctrl-refresh:active{ transform:scale(0.94); }
+  .tvctrl-refresh svg{ width:16px; height:16px; }
+  .tvctrl-refresh.spinning svg{ animation: refreshSpin .6s linear; }
+  @keyframes refreshSpin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+  .tvctrl-refresh span{
+    font-family:'JetBrains Mono', monospace; font-size:8px; letter-spacing:1.5px;
+  }
   .tvctrl-arrow{
     background:none; border:none; color:var(--ink-dim); width:100%;
     padding:12px 0; cursor:pointer; line-height:1; transition: background .15s ease, color .15s ease;
@@ -247,20 +243,6 @@
   #guideOverlayList{ overflow-y:auto; padding:6px 0 24px 0; flex:1 1 auto; }
 
   @media (max-width:640px){
-    #shield{
-      clip-path: polygon(
-        0 0, 100% 0,
-        100% calc(100% - 54px),
-        calc(100% - 16px) calc(100% - 54px),
-        calc(100% - 106px) calc(100% - 54px),
-        calc(100% - 106px) calc(100% - 14px),
-        calc(100% - 16px) calc(100% - 14px),
-        calc(100% - 16px) calc(100% - 54px),
-        100% calc(100% - 14px),
-        100% 100%,
-        0 100%
-      );
-    }
     #guideOverlayPanel{ width:100%; border-radius:0; }
     #bug .name{ font-size:12px; }
     #bug .num{ font-size:9px; padding-right:6px; }
@@ -272,7 +254,8 @@
     #guideHint{ font-size:9px; padding:6px 12px; }
     .tvctrl{ width:40px; border-radius:12px; }
     .tvctrl-left{ left:10px; }
-    .tvctrl-right{ right:10px; }
+    #chCtrlGroup{ right:10px; gap:8px; }
+    .tvctrl-refresh{ width:40px; border-radius:12px; padding:8px 0 7px 0; }
     .tvctrl-arrow{ padding:9px 0; }
     .tvctrl-mid{ font-size:10px; padding:8px 2px; }
   }
@@ -331,15 +314,22 @@
       <div class="tvctrl-label">VOL</div>
     </div>
 
-    <div id="chCtrl" class="tvctrl tvctrl-right">
-      <button id="chUp" class="tvctrl-arrow" aria-label="Channel Up">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+    <div id="chCtrlGroup">
+      <div id="chCtrl" class="tvctrl">
+        <button id="chUp" class="tvctrl-arrow" aria-label="Channel Up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+        </button>
+        <button id="chMid" class="tvctrl-mid" aria-label="Current Channel"><span id="chVal">1</span></button>
+        <button id="chDown" class="tvctrl-arrow" aria-label="Channel Down">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="tvctrl-label">CH</div>
+      </div>
+
+      <button id="refreshBtn" class="tvctrl-refresh" aria-label="Refresh Stream" title="Ad taking too long? Try refreshing.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        <span>REFRESH</span>
       </button>
-      <button id="chMid" class="tvctrl-mid" aria-label="Current Channel"><span id="chVal">1</span></button>
-      <button id="chDown" class="tvctrl-arrow" aria-label="Channel Down">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-      <div class="tvctrl-label">CH</div>
     </div>
   </div>
 
@@ -1130,7 +1120,7 @@ window.onYouTubeIframeAPIReady = function(){ /* overwritten below with createPla
 // thinks its player is, so the video gets a bit softer as this goes down.
 const YT_ZOOM = 0.4;
 const CROP_HEIGHT_SCALE = 1.1111;
-const CROP_TOP_FRACTION = 0.10;
+const CROP_TOP_FRACTION = 0; // no upward shift — video sits in its normal position
 
 function applyIframeZoom(){
   if(!player || !player.getIframe) return;
@@ -1467,6 +1457,29 @@ function channelStep(delta){
 chUpBtn.addEventListener('click', ()=> channelStep(1));
 chDownBtn.addEventListener('click', ()=> channelStep(-1));
 $('chMid').addEventListener('click', openGuideOverlay);
+
+// ---- Refresh Stream: reload the current video from scratch. Doesn't skip
+// channel or song — just re-requests the same spot in the broadcast, which
+// also rerolls which ad (if any) YouTube serves, in hopes of a shorter one.
+const refreshBtn = $('refreshBtn');
+function refreshStream(){
+  if(!player || !player.loadVideoById) return;
+  const channel = CHANNELS[currentChannelNum];
+  const state = getBroadcastState(channel.songs, now());
+  currentIndex = state.index;
+  beginTransition();
+  transitionBurst();
+  renderNowPlaying();
+  showBumper(channel);
+  player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
+  applyIframeZoom();
+}
+refreshBtn.addEventListener('click', ()=>{
+  refreshStream();
+  refreshBtn.classList.remove('spinning');
+  void refreshBtn.offsetWidth;
+  refreshBtn.classList.add('spinning');
+});
 
 // ---- Jump straight into Channel 1 on load --------------------------------
 if(window.YT && window.YT.Player){ createPlayer(); }
