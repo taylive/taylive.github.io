@@ -1119,8 +1119,8 @@ window.onYouTubeIframeAPIReady = function(){ /* overwritten below with createPla
 // the tradeoff is YouTube also serves a lower-res stream the smaller it
 // thinks its player is, so the video gets a bit softer as this goes down.
 const YT_ZOOM = 0.4;
-const CROP_HEIGHT_SCALE = 1.1111;
-const CROP_TOP_FRACTION = 0; // no upward shift — video sits in its normal position
+const CROP_HEIGHT_SCALE = 1.0; // no crop — full-height fill
+const CROP_TOP_FRACTION = 0;   // no shift — normal position
 
 function applyIframeZoom(){
   if(!player || !player.getIframe) return;
