@@ -60,6 +60,9 @@
      below) rather than fixed CSS, because it depends on the live pixel size
      of #stage and needs to recompute on resize. */
   #playerFrame iframe{ position:absolute; pointer-events:auto; }
+  /* Local mp4 lyric videos fill the same box the iframe would, no zoom hack
+     needed since there's no YouTube chrome to shrink. */
+  #playerFrame video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
 
   /* Full-coverage shield: blocks all clicks/hover on the video (no pause,
      no seek, no hover-triggered YouTube UI, no way to click Skip Ad —
@@ -899,26 +902,26 @@ const CHANNELS = {
     { title:"it’s time to go", id:"1iRbIYkccgw", duration:210, era:"evermore", accent:"#C97B4A" },
   ]},
   210:{ number:210, name:"Midnights", group:"ALBUM LYRICS", songs:[
-    { title:"Lavender Haze", id:"mkR_Qwix4Ho", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Maroon", id:"lvHZjvIyqsk", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Anti-Hero", id:"XqN2qFvY64U", duration:200, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Snow On The Beach (feat. Lana Del Rey)", id:"ycE7bUq3-2k", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"You're On Your Own, Kid", id:"7Gbg6Z70J7E", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Midnight Rain", id:"Odh9ddPUkEY", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Question...?", id:"xxrf_QBD5DE", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Vigilante Shit", id:"Uoey4W_3bos", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Bejeweled", id:"XzKSPRqFg9E", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Labyrinth", id:"xTXsKMXUi7w", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Karma", id:"rg18Kf4en2o", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Sweet Nothing", id:"rn0brgg2BpI", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Mastermind", id:"Tmz1lz0zcLQ", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"The Great War", id:"iFX6_9h7th0", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Bigger Than The Whole Sky", id:"l8Tps3PITx4", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Paris", id:"ySZGZrcqvr4", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"High Infidelity", id:"-qee6dFKlw4", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Glitch", id:"Y2a73EvnZ4s", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Would've, Could've, Should've", id:"B-MfwP_RmHY", duration:210, era:"Midnights", accent:"#8B7FD6" },
-    { title:"Dear Reader", id:"X0Jti9F-oQA", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Lavender Haze", local:"Taylor Swift - Lavender Haze (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Maroon", local:"Taylor Swift - Maroon (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Anti-Hero", local:"Taylor Swift - Anti-Hero (Official Lyric Video) - Taylor Swift.mp4", duration:200, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Snow On The Beach (feat. Lana Del Rey)", local:"Taylor Swift - Snow On The Beach (feat. Lana Del Rey) (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"You're On Your Own, Kid", local:"Taylor Swift - You're On Your Own, Kid (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Midnight Rain", local:"Taylor Swift - Midnight Rain (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Question...?", local:"Taylor Swift - Question...? (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Vigilante Shit", local:"Taylor Swift - Vigilante Shit (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Bejeweled", local:"Taylor Swift - Bejeweled (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Labyrinth", local:"Taylor Swift - Labyrinth (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Karma", local:"Taylor Swift - Karma (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Sweet Nothing", local:"Taylor Swift - Sweet Nothing (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Mastermind", local:"Taylor Swift - Mastermind (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"The Great War", local:"Taylor Swift - The Great War (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Bigger Than The Whole Sky", local:"Taylor Swift - Bigger Than The Whole Sky (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Paris", local:"Taylor Swift - Paris (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"High Infidelity", local:"Taylor Swift - High Infidelity (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Glitch", local:"Taylor Swift - Glitch (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Would've, Could've, Should've", local:"Taylor Swift - Would've, Could've, Should've (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
+    { title:"Dear Reader", local:"Taylor Swift - Dear Reader (Official Lyric Video) - Taylor Swift.mp4", duration:210, era:"Midnights", accent:"#8B7FD6" },
   ]},
   211:{ number:211, name:"The Tortured Poets Department", group:"ALBUM LYRICS", songs:[
     { title:"Fortnight (feat Post Malone)", id:"HzsQHfBA3MY", duration:228, era:"The Tortured Poets Department", accent:"#8f8f8f" },
@@ -1093,8 +1096,9 @@ fetchServerEpoch().then(()=>{
   }
 });
 
-// ---- YouTube IFrame API -------------------------------------------------
+// ---- Playback engine: YouTube iframe OR a local <video> file ------------
 let player = null;
+let playerKind = null; // 'youtube' | 'local' — which engine `player` currently is
 let resyncInterval = null;
 // Songs that turn out broken/non-embeddable get blacklisted per-channel for
 // the rest of the session, so a channel just routes around them forever.
@@ -1146,17 +1150,75 @@ window.addEventListener('resize', ()=>{
   zoomResizeTimer = setTimeout(applyIframeZoom, 150);
 });
 
-function createPlayer(){
-  const channel = CHANNELS[currentChannelNum];
-  const state = getBroadcastState(channel.songs, now());
-  currentIndex = state.index;
-  beginTransition();
-  renderNowPlaying();
-  showBumper(channel);
+function isLocalSong(song){ return !!song.local; }
 
-  player = new YT.Player('playerFrame', {
+function destroyCurrentPlayer(){
+  if(playerKind === 'youtube' && player && player.destroy){
+    try{ player.destroy(); }catch(e){}
+  }
+  if(playerKind === 'local' && player && player._el){
+    player._el.pause();
+    player._el.removeAttribute('src');
+    player._el.load();
+    player._el.remove();
+  }
+  player = null;
+  playerKind = null;
+}
+
+// A local <video> wrapped so it exposes the same handful of calls the rest
+// of the app already uses on the YouTube player (playVideo, seekTo,
+// getCurrentTime, getPlayerState, setVolume, mute/unMute, getIframe) — the
+// numeric state codes match YT.PlayerState's own values (ENDED:0, PLAYING:1,
+// PAUSED:2, BUFFERING:3) so every existing comparison against YT.PlayerState
+// still works untouched.
+function createLocalPlayer(song, startSeconds){
+  const container = document.getElementById('playerFrame');
+  container.innerHTML = '';
+  const videoEl = document.createElement('video');
+  videoEl.src = 'midnights/' + song.local;
+  videoEl.muted = true; // starts muted like the YouTube path — unmuteOnFirstInteraction handles the rest
+  videoEl.playsInline = true;
+  videoEl.controls = false;
+  videoEl.autoplay = true;
+  container.appendChild(videoEl);
+
+  const wrapper = {
+    _el: videoEl,
+    playVideo(){ videoEl.play().catch(()=>{}); },
+    seekTo(sec){ try{ videoEl.currentTime = sec; }catch(e){} },
+    getCurrentTime(){ return videoEl.currentTime || 0; },
+    getPlayerState(){
+      if(videoEl.ended) return 0;          // YT.PlayerState.ENDED
+      if(videoEl.paused) return 2;         // YT.PlayerState.PAUSED
+      if(videoEl.readyState < 3) return 3; // YT.PlayerState.BUFFERING
+      return 1;                            // YT.PlayerState.PLAYING
+    },
+    setVolume(v){ videoEl.volume = Math.max(0, Math.min(100, v)) / 100; },
+    mute(){ videoEl.muted = true; },
+    unMute(){ videoEl.muted = false; },
+    getIframe(){ return null; }, // tells applyIframeZoom() there's nothing to zoom — local files fill the box via CSS instead
+    destroy(){ videoEl.pause(); videoEl.remove(); }
+  };
+
+  videoEl.addEventListener('loadedmetadata', ()=>{
+    if(startSeconds) { try{ videoEl.currentTime = startSeconds; }catch(e){} }
+  }, { once:true });
+  videoEl.addEventListener('playing', ()=> onPlayerStateChange({ data:1, target:wrapper }));
+  videoEl.addEventListener('pause',   ()=> onPlayerStateChange({ data:2, target:wrapper }));
+  videoEl.addEventListener('waiting', ()=> onPlayerStateChange({ data:3, target:wrapper }));
+  videoEl.addEventListener('ended',   ()=> onPlayerStateChange({ data:0, target:wrapper }));
+  // A missing/broken local file behaves just like an unembeddable YouTube
+  // video: skip it and blacklist that slot for the rest of the session.
+  videoEl.addEventListener('error', ()=> advanceToNext(true));
+
+  return wrapper;
+}
+
+function createYouTubePlayer(song, startSeconds){
+  return new YT.Player('playerFrame', {
     host: 'https://www.youtube-nocookie.com',
-    videoId: channel.songs[currentIndex].id,
+    videoId: song.id,
     playerVars: {
       // Starts muted: browsers block autoplay-with-sound unless it's in
       // response to a user gesture, and we're now autoplaying immediately
@@ -1164,7 +1226,7 @@ function createPlayer(){
       // below unmutes it the moment the visitor does anything on the page.
       autoplay: 1, mute: 1, controls: 0, disablekb: 1, modestbranding: 1, rel: 0, fs: 0,
       iv_load_policy: 3, cc_load_policy: 0, playsinline: 1,
-      start: Math.floor(state.offset), origin: window.location.origin
+      start: Math.floor(startSeconds), origin: window.location.origin
     },
     events: {
       onReady: (e)=>{
@@ -1185,6 +1247,51 @@ function createPlayer(){
       onError: ()=> advanceToNext(true)
     }
   });
+}
+
+// The single entry point everything else calls to play a song, regardless
+// of whether it's a YouTube video or a local file. Reuses the existing
+// engine in place when possible (fast path — same as the old loadVideoById
+// calls); tears down and rebuilds only when actually switching engines
+// (e.g. tuning from a YouTube channel into the local Midnights lyrics one).
+function loadSong(song, startSeconds){
+  const wantKind = isLocalSong(song) ? 'local' : 'youtube';
+
+  if(wantKind === 'youtube' && playerKind === 'youtube' && player && player.loadVideoById){
+    player.loadVideoById({ videoId: song.id, startSeconds: Math.floor(startSeconds || 0) });
+    applyIframeZoom();
+    return;
+  }
+  if(wantKind === 'local' && playerKind === 'local' && player && player._el){
+    player._el.src = 'midnights/' + song.local;
+    player._el.currentTime = startSeconds || 0;
+    player.playVideo();
+    return;
+  }
+
+  destroyCurrentPlayer();
+
+  if(wantKind === 'local'){
+    playerKind = 'local';
+    player = createLocalPlayer(song, startSeconds || 0);
+    player.playVideo();
+    applyVolumeToPlayer();
+    startResync();
+  } else {
+    playerKind = 'youtube';
+    player = createYouTubePlayer(song, startSeconds || 0);
+    // onReady above handles play/volume/resync/zoom for this path.
+  }
+}
+
+function createPlayer(){
+  const channel = CHANNELS[currentChannelNum];
+  const state = getBroadcastState(channel.songs, now());
+  currentIndex = state.index;
+  beginTransition();
+  renderNowPlaying();
+  showBumper(channel);
+  loadSong(channel.songs[currentIndex], state.offset);
 }
 
 let transitionSafetyTimer = null;
@@ -1244,10 +1351,9 @@ function advanceToNext(fromError){
   currentIndex = next;
   const channel = CHANNELS[currentChannelNum];
   renderNowPlaying();
+  showBumper(channel);
   setTimeout(()=>{
-    if(player && player.loadVideoById){
-      player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: 0 });
-    }
+    loadSong(channel.songs[currentIndex], 0);
   }, fromError ? 400 : 250);
 }
 
@@ -1281,7 +1387,7 @@ function startResync(){
         currentIndex = state.index;
         renderNowPlaying();
         showBumper(channel);
-        player.loadVideoById({ videoId: songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
+        loadSong(songs[currentIndex], state.offset);
       }
       return;
     }
@@ -1301,10 +1407,7 @@ function tuneToChannel(num){
   transitionBurst();
   renderNowPlaying();
   showBumper(channel);
-  if(player && player.loadVideoById){
-    player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
-    applyIframeZoom();
-  }
+  loadSong(channel.songs[currentIndex], state.offset);
   renderGuideList();
 }
 
@@ -1463,7 +1566,7 @@ $('chMid').addEventListener('click', openGuideOverlay);
 // also rerolls which ad (if any) YouTube serves, in hopes of a shorter one.
 const refreshBtn = $('refreshBtn');
 function refreshStream(){
-  if(!player || !player.loadVideoById) return;
+  if(!player) return;
   const channel = CHANNELS[currentChannelNum];
   const state = getBroadcastState(channel.songs, now());
   currentIndex = state.index;
@@ -1471,8 +1574,7 @@ function refreshStream(){
   transitionBurst();
   renderNowPlaying();
   showBumper(channel);
-  player.loadVideoById({ videoId: channel.songs[currentIndex].id, startSeconds: Math.floor(state.offset) });
-  applyIframeZoom();
+  loadSong(channel.songs[currentIndex], state.offset);
 }
 refreshBtn.addEventListener('click', ()=>{
   refreshStream();
